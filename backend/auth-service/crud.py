@@ -2,8 +2,10 @@ from sqlalchemy.orm import Session
 from models import User
 from passlib.context import CryptContext
 
+# Configuration du contexte de hachage pour les mots de passe
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# CRUD pour les utilisateurs (étudiants et enseignants)
 def create_user(db: Session, user):
     hashed_password = pwd_context.hash(user.password)
     db_user = User(
@@ -12,11 +14,15 @@ def create_user(db: Session, user):
         password=hashed_password,
         role=user.role
     )
+    # Ajouter l'utilisateur à la base de données
     db.add(db_user)
+    # Valider les changements dans la base de données
     db.commit()
+    # Rafraîchir l'instance de l'utilisateur pour obtenir son ID généré
     db.refresh(db_user)
     return db_user
 
+# Fonction pour authentifier un utilisateur
 def authenticate_user(db: Session, email: str, password: str):
     user = db.query(User).filter(User.email == email).first()
     if user and pwd_context.verify(password, user.password):
