@@ -1,0 +1,48 @@
+============================================================
+EXAMEN — TEXTE COMPLET
+============================================================
+
+| Exercice 1 : (4 points )
+. : 4 a 3 2u,
+Soit (u,,) la suite numérique définie par: u, == et u,,, = “— pour tout 1 de IN
+2 2u, +5
+1) Calculer x,
+2) Montrer par récurrence que pour tout 1 de IN, u, >0
+2
+3)a) Montrer que pour tout n de IN, 0<u,,) $ ri
+puis en déduire que pour tout n de IN, 0<u,< als
+b) Calculer limu,
+4) On considére la suite numérique (v,,) définie par v,, = 3 + 3 pour tout 1 de JN.
+u,, +
+a) Montrer que (v,) est _une suite g¢ométrique de raison 2
+b) Déterminer y, en fonction de n et en déduire w, en fonction de 7 pour tout 1 de IN ,
+
+============================================================
+FORMULES MATHÉMATIQUES (LaTeX)
+============================================================
+
+[Formule 1]
+$$
+\left\lbrack\L^{\frac{n}{\mathrm{Exerte~}}\frac{1}{1:(4\mathrm{~polats~})}}\right\rbrack
+$$
+
+[Formule 2]
+$$
+\left|\,\mathrm{Soit}\,(u_{n})\,\mathrm{\la\,suite\,numerique{definie\,\,part}}\,\,\,u_{0}={\frac{3}{2}}\,\,\,\mathrm{et}\,\,\,u_{n+1}={\frac{2u_{n}}{2u_{n}+5}}\,\,\,{\mathrm{pour\,\,toot}}\,\,n\,\,\,d e^{-\frac{3}{2}}\,\,u_{n+1}={\frac{\sqrt{1}}{2u_{n}+5}}\,\,\,{\mathrm{~pour\,\,tout~}}\,\,n\,\,d e^{-\frac{2t}{2u_{n+1}}\,\,u_{n+1}}\,.
+$$
+
+[Formule 3]
+$$
+\left.\left|{\textbf{I}}\right|{\textbf{C a l e r}}u_{1}
+$$
+
+[Formule 4]
+$$
+\left|\ 4\right\rangle\mathrm{On\;considere\;la\;suite\;numerique}\;\left(\nu_{n}\right)\mathrm{definie\;par}\;\nu_{n}={\frac{4u_{n}}{2u_{n}+3}}\;\mathrm{pour~tout}\;n\;\mathrm{de}\;\;n
+$$
+
+[Formule 5]
+$$
+\left|{\begin{array}{c}{\mathbf{a}}\end{array}}\right|{\mathrm{Montrer~que~}}(\nu_{n})\operatorname{eat~une~suite~gieomttrique~de~raison~}_{\frac{m}{c}}\end{array}}\right|
+$$
+

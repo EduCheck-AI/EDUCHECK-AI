@@ -1,0 +1,194 @@
+.exam-import {
+  max-width: 700px;
+  margin: 0 auto;
+  animation: fadeIn 0.35s ease both;
+}
+
+.exam-import h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.75rem;
+}
+
+.import-card {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: var(--bg);
+  margin-bottom: 1.5rem;
+}
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--primary-light);
+  background: var(--primary-glow);
+}
+.drop-zone.has-file {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.drop-zone-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+.drop-zone-icon.pdf { color: var(--danger); }
+.drop-zone-icon.image { color: var(--primary-light); }
+.drop-zone-icon.txt { color: var(--warning); }
+.drop-zone-icon.default { color: var(--text-light); }
+
+.drop-zone-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.35rem;
+}
+.drop-zone-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.file-input { display: none; }
+
+.format-badges {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.format-badge {
+  padding: 0.2rem 0.6rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.import-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Loading state */
+.import-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+}
+.import-loading p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* Preview */
+.preview-card {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  padding: 1.5rem;
+  animation: fadeIn 0.35s ease both;
+}
+
+.preview-card h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.preview-item {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+.preview-item label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+.preview-item span {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.preview-text-block h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.preview-text {
+  background: var(--bg-dark);
+  color: #a8d8a8;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.import-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: var(--accent-glow);
+  border: 1px solid rgba(39,174,96,0.25);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+  color: var(--accent);
+  line-height: 1.5;
+}
+.import-info-icon { flex-shrink: 0; margin-top: 2px; }
+.import-loading-hint { font-size: 0.78rem; color: var(--text-light); margin-top: 0.25rem; }

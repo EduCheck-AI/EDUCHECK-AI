@@ -1,0 +1,201 @@
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(13,31,51,0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease both;
+}
+
+.modal-content {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 2rem;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease both;
+}
+
+.modal-large { max-width: 620px; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1.5px solid var(--border-light);
+}
+
+/* Type toggle */
+.type-toggle {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: white;
+  cursor: pointer;
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+
+.type-btn:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+}
+
+.type-btn.selected {
+  border-color: var(--primary-light);
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+/* Label hint */
+.label-hint {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.35rem;
+}
+
+/* Choix QCM */
+.choix-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.choix-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  background: var(--bg);
+  transition: all var(--transition);
+}
+
+.choix-row.correct {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.choix-radio {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition);
+}
+
+.choix-radio.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  font-size: 1rem;
+}
+
+.choix-input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  padding: 0.4rem 0.5rem !important;
+  box-shadow: none !important;
+}
+
+.choix-input:focus {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.choix-delete {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.choix-delete:hover {
+  background: rgba(231,76,60,0.1);
+  color: var(--danger);
+}
+
+.btn-add-choix {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-add-choix:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+  background: var(--primary-glow);
+}
+
+/* Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+  margin-top: 1rem;
+}

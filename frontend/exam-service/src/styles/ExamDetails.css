@@ -1,0 +1,131 @@
+.exam-details { animation: fadeIn 0.35s ease both; }
+
+.details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--transition);
+}
+.back-link:hover { color: var(--primary-light); }
+
+.header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.exam-info {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 1.75rem;
+  margin-bottom: 2rem;
+}
+
+.exam-info h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1.5px solid var(--border-light);
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.info-item label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.info-item p {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.description {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-light);
+}
+.description h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.description p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* Contenu brut fallback */
+.contenu-brut-block {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--warning);
+  box-shadow: 0 0 0 3px rgba(243,156,18,0.08);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.contenu-brut-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.contenu-brut-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--warning);
+  margin-bottom: 0.35rem;
+}
+
+.contenu-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  max-width: 480px;
+}
+
+.contenu-brut-text {
+  margin-top: 1.25rem;
+  background: var(--bg-dark);
+  color: #a8d8a8;
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  max-height: 400px;
+  overflow-y: auto;
+  animation: fadeIn 0.25s ease both;
+}
