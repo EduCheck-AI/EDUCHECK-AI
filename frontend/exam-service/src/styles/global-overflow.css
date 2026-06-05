@@ -1,0 +1,71 @@
+/* ============================================
+   GLOBAL OVERFLOW-X FIX
+   Empêche le défilement horizontal sur toutes les pages
+   ============================================ */
+
+/* Reset global */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Tous les conteneurs principaux */
+.page-container,
+.exam-list,
+.exam-import,
+.exam-form,
+.exam-details,
+.page-header,
+.main-content-with-sidebar,
+.content-wrapper,
+.app-with-sidebar {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Grilles et Flex - s'assurer qu'ils ne débordent pas */
+.stats-grid,
+.search-filter-bar,
+.page-header,
+.header-actions,
+.exam-card,
+.ef-layout,
+.question-card {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* S'assurer que les inputs et boutons ne débordent pas */
+input,
+textarea,
+select,
+button {
+  max-width: 100%;
+}
+
+/* Responsive - adapter les éléments sur mobile */
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 12px;
+  }
+
+  .page-header {
+    padding: 0 12px;
+  }
+
+  .search-box {
+    max-width: 100% !important;
+  }
+}

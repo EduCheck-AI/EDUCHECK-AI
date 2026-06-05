@@ -61,12 +61,14 @@ def publish_exam(db: Session, exam_id: int):
 # ===== CRUD pour Questions =====
 
 def create_question(db: Session, question: schemas.QuestionCreate):
+    # PAS de json.dumps ici - question.reponse_correcte est déjà une string
     db_question = models.Question(
         exam_id=question.exam_id,
         texte=question.texte,
         points=question.points,
         type_question=question.type_question,
-        ordre=question.ordre
+        ordre=question.ordre,
+        reponse_correcte=question.reponse_correcte  # ← Déjà une string
     )
     db.add(db_question)
     db.commit()
@@ -111,7 +113,11 @@ def delete_questions_by_exam(db: Session, exam_id: int):
     db.commit()
 
 # ===== CRUD pour Copies =====
-
+def get_copie(db: Session, copie_id: int):
+    return db.query(models.CopieEtudiant).filter(
+        models.CopieEtudiant.id == copie_id
+    ).first()
+    
 def create_copie(db: Session, copie: schemas.CopieCreate):
     db_copie = models.CopieEtudiant(
         exam_id=copie.exam_id,
@@ -144,3 +150,4 @@ def update_copie_note(db: Session, copie_id: int, note: float):
         db.commit()
         db.refresh(db_copie)
     return db_copie
+

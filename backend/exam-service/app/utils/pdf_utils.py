@@ -47,3 +47,4 @@ def extract_text_from_pdf(file: UploadFile) -> str:
         
     except Exception as e:
         raise Exception(f"Erreur lors de l'extraction PDF: {str(e)}")
+    

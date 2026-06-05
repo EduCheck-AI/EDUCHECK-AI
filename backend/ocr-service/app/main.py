@@ -112,7 +112,7 @@ def nettoyer_texte(texte: str) -> str:
 # ════════════════════════════════════════════════════════
 
 async def groq_texte_depuis_image(b64: str) -> str:
-    prompt = """Tu es un expert OCR d'examens mathématiques français niveau baccalauréat.
+    prompt = """Tu es un expert OCR d'examens.
 Transcris EXACTEMENT tout le contenu de cette image en texte lisible.
 
 RÈGLES STRICTES :
@@ -129,7 +129,7 @@ RÈGLES STRICTES :
 4. ENSEMBLES : IN*, IR — jamais ℕ ℝ
 5. INTERDIT : ##, **, *, $, \\frac, \\sqrt
 6. Conserve les accents français (é è à ç)
-7. NE RIEN AJOUTER"""
+7. NE RIEN AJOUTER et n'ajoutE AUCUN COMMENTAIRE"""
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
@@ -157,7 +157,7 @@ RÈGLES STRICTES :
 
 async def groq_latex_depuis_image(b64: str) -> str:
     """Image → LaTeX via Groq vision"""
-    prompt = """Tu es un expert OCR spécialisé en examens mathématiques français niveau baccalauréat.
+    prompt = """Tu es un expert OCR spécialisé en examenst.
 Transcris EXACTEMENT tout le contenu de cette image en LaTeX.
 
 RÈGLES :
@@ -167,7 +167,7 @@ RÈGLES :
 4. Formules inline : $f_n(x) = \\sqrt{x}(\\ln x)^n$
 5. Formules display : \\[ f_n'(x) = \\frac{1}{2\\sqrt{x}}(\\ln x)^{n-1}(2n + \\ln x) \\]
 6. Symboles : $\\forall$, $\\in$, $\\lim_{x \\to +\\infty}$, $\\mathbb{N}^*$, $\\beta$
-7. NE RIEN INVENTER"""
+7. NE RIEN INVENTER et n'ajoute aucun commentaire"""
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
@@ -194,7 +194,7 @@ RÈGLES :
 
 async def groq_latex_depuis_texte(texte: str) -> str:
     """Texte lisible → LaTeX via Groq (pas de vision, juste texte)"""
-    prompt = f"""Convertis ce texte d'examen mathématique en code LaTeX propre.
+    prompt = f"""Convertis ce texte d'examen en code LaTeX propre.
 
 TEXTE À CONVERTIR :
 {texte}
@@ -209,7 +209,9 @@ RÈGLES :
    lim_(x->+inf) → $\\lim_{{x \\to +\\infty}}$,
    (a)/(b) → $\\frac{{a}}{{b}}$, IN* → $\\mathbb{{N}}^*$, beta → $\\beta$
 7. Conserve les accents français
-8. NE RIEN INVENTER"""
+8. NE RIEN INVENTER et n'ajoute aucun commentaire
+et sans ajouter cette phrase à ta réponse : "Voici le code LaTeX propre "
+"""
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
@@ -314,7 +316,7 @@ async def health():
 async def process_image(file: UploadFile = File(...)):
     """Image → texte propre lisible → stocké en DB"""
     try:
-        logger.info(f"📄 OCR texte: {file.filename}")
+        logger.info(f"OCR texte: {file.filename}")
         contents = await file.read()
         if not contents:
             raise HTTPException(status_code=400, detail="Fichier vide")
@@ -324,7 +326,7 @@ async def process_image(file: UploadFile = File(...)):
 
         b64 = preparer_image(contents)
         texte = await groq_texte_depuis_image(b64)
-        logger.info(f"✅ {len(texte)} chars extraits")
+        logger.info(f"{len(texte)} chars extraits")
         return {"success": True, "filename": file.filename,
                 "text": texte, "length": len(texte)}
 

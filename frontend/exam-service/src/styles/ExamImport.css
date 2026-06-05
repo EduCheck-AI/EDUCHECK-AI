@@ -1,7 +1,11 @@
 .exam-import {
-  max-width: 700px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
   animation: fadeIn 0.35s ease both;
+  overflow-x: hidden;
 }
 
 .exam-import h1 {
@@ -47,10 +51,18 @@
   margin-bottom: 0.75rem;
   display: block;
 }
-.drop-zone-icon.pdf { color: var(--danger); }
-.drop-zone-icon.image { color: var(--primary-light); }
-.drop-zone-icon.txt { color: var(--warning); }
-.drop-zone-icon.default { color: var(--text-light); }
+.drop-zone-icon.pdf {
+  color: var(--danger);
+}
+.drop-zone-icon.image {
+  color: var(--primary-light);
+}
+.drop-zone-icon.txt {
+  color: var(--warning);
+}
+.drop-zone-icon.default {
+  color: var(--text-light);
+}
 
 .drop-zone-text {
   font-size: 0.95rem;
@@ -63,7 +75,9 @@
   color: var(--text-muted);
 }
 
-.file-input { display: none; }
+.file-input {
+  display: none;
+}
 
 .format-badges {
   display: flex;
@@ -98,7 +112,10 @@
   padding: 2rem;
   text-align: center;
 }
-.import-loading p { color: var(--text-muted); font-size: 0.9rem; }
+.import-loading p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
 
 /* Preview */
 .preview-card {
@@ -182,7 +199,7 @@
   align-items: flex-start;
   gap: 0.6rem;
   background: var(--accent-glow);
-  border: 1px solid rgba(39,174,96,0.25);
+  border: 1px solid rgba(39, 174, 96, 0.25);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
   margin-bottom: 1.25rem;
@@ -190,5 +207,12 @@
   color: var(--accent);
   line-height: 1.5;
 }
-.import-info-icon { flex-shrink: 0; margin-top: 2px; }
-.import-loading-hint { font-size: 0.78rem; color: var(--text-light); margin-top: 0.25rem; }
+.import-info-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.import-loading-hint {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin-top: 0.25rem;
+}

@@ -37,6 +37,7 @@ class QuestionBase(BaseModel):
     points: float = 1.0
     type_question: str = "ouverte"
     ordre: int = 0
+    reponse_correcte: Optional[str] = None  # Pour les questions à choix multiples, etc.
 
 class QuestionCreate(QuestionBase):
     exam_id: int

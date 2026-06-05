@@ -1,4 +1,8 @@
-.exam-details { animation: fadeIn 0.35s ease both; }
+.exam-details {
+  animation: fadeIn 0.35s ease both;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 
 .details-header {
   display: flex;
@@ -128,4 +132,4 @@
   max-height: 400px;
   overflow-y: auto;
   animation: fadeIn 0.25s ease both;
-}
+}}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-const LoadingSpinner = ({ message = 'Chargement...' }) => (
+const LoadingSpinner = ({ message = "Chargement..." }) => (
   <div className="loading-container">
     <div className="spinner" />
     <p>{message}</p>

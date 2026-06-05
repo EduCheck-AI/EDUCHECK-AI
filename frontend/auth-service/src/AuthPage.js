@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import {
   Mail,
   Lock,
@@ -12,6 +14,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AuthPage() {
+    const navigate = useNavigate(); // 👈 ICI (dans le composant)
+
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -30,57 +34,80 @@ export default function AuthPage() {
     setError('');
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError('');
-  setSuccess('');
-
-  try {
-    const url = isLogin
-      ? "http://127.0.0.1:8000/auth/login"
-      : "http://127.0.0.1:8000/auth/register";
-
-    const bodyData = isLogin
-      ? {
-          email: formData.email,
-          password: formData.password
-        }
-      : {
-          full_name: formData.fullName,  // correspond au schema
-          email: formData.email,
-          password: formData.password,
-          role: formData.role
-        };
-
-const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData)
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setSuccess(data.message);
-      if (isLogin) console.log("User:", data.user);
-    } else {
-      // Gestion des erreurs Pydantic (tableau d'objets)
-      if (Array.isArray(data.detail)) {
-        const errorMessages = data.detail
-          .map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
-          .join(", ");
-        setError(errorMessages);
-      } else {
-        setError(data.detail || "Erreur serveur");
-      }
+  // Fonction pour valider la taille du mot de passe (max 72 bytes)
+  const validatePassword = (password) => {
+    // Calculer la taille en bytes UTF-8
+    const byteLength = new TextEncoder().encode(password).length;
+    
+    if (byteLength > 72) {
+      setError(`Le mot de passe est trop long (${byteLength} bytes). Maximum: 72 bytes.`);
+      return false;
     }
-  } catch (err) {
-    setError("Impossible de contacter le serveur");
-  }
+    return true;
+  };
 
-  setIsLoading(false);
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+     navigate("/dashbord");
+
+    // Valider la taille du mot de passe avant l'envoi
+    if (!validatePassword(formData.password)) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const url = isLogin
+        ? "http://127.0.0.1:8000/auth/login"
+        : "http://127.0.0.1:8000/auth/register";
+
+      const bodyData = isLogin
+        ? {
+            email: formData.email,
+            password: formData.password
+          }
+        : {
+            full_name: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            role: formData.role
+          };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData)
+      });
+
+      const data = await response.json();
+
+     if (response.ok) {
+  const userName = data.user.full_name || data.user.name;
+
+  localStorage.setItem("userName", userName);
+
+  navigate("/dashbord");
+}
+      else {
+        // Gestion des erreurs Pydantic (tableau d'objets)
+        if (Array.isArray(data.detail)) {
+          const errorMessages = data.detail
+            .map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
+            .join(", ");
+          setError(errorMessages);
+        } else {
+          setError(data.detail || "Erreur serveur");
+        }
+      }
+    } catch (err) {
+      setError("Impossible de contacter le serveur");
+    }
+
+    setIsLoading(false);
+  };
 
   return (
     <div className="min-h-screen flex bg-gray-50 font-sans">
@@ -225,7 +252,13 @@ const response = await fetch(url, {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
                   {isLogin && (
                     <div className="text-sm">
-                      <a href="#" className="font-medium text-blue-600 hover:text-blue-500">Oublié ?</a>
+                      <button
+                        type="button"
+                        onClick={() => alert("Fonctionnalité à venir")}
+                        className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition-colors"
+                      >
+                        Mot de passe oublié ?
+                      </button>
                     </div>
                   )}
                 </div>
@@ -245,6 +278,9 @@ const response = await fetch(url, {
                     onChange={handleChange}
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Maximum 72 caractères
+                </p>
               </div>
 
               {/* Sélection du Rôle (Inscription uniquement) */}
@@ -312,12 +348,13 @@ const response = await fetch(url, {
             <p className="text-sm text-gray-600">
               {isLogin ? "Pas encore de compte ?" : "Vous avez déjà un compte ?"}
               <button
+                type="button"
                 onClick={() => {
-                   setIsLogin(!isLogin);
-                   setError('');
-                   setSuccess('');
+                  setIsLogin(!isLogin);
+                  setError('');
+                  setSuccess('');
                 }}
-                className="ml-2 font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                className="ml-2 font-medium text-blue-600 hover:text-blue-500 focus:outline-none focus:underline transition-colors"
               >
                 {isLogin ? "Inscrivez-vous gratuitement" : "Connectez-vous"}
               </button>
@@ -335,13 +372,19 @@ const response = await fetch(url, {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+            <button 
+              type="button"
+              className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
               <span className="sr-only">Google</span>
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
               </svg>
             </button>
-            <button className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+            <button 
+              type="button"
+              className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
               <span className="sr-only">Microsoft</span>
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z" />

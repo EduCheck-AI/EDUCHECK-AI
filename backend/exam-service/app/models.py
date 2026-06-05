@@ -31,6 +31,7 @@ class Question(Base):
     points = Column(DECIMAL(5,2), default=1.0)
     type_question = Column(String(20), default="ouverte")  # qcm, ouverte, calcul
     ordre = Column(Integer, default=0)
+    reponse_correcte = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # Relation avec l'examen
@@ -50,3 +51,4 @@ class CopieEtudiant(Base):
     
     # Relations
     examen = relationship("Examen", back_populates="copies")
+    
