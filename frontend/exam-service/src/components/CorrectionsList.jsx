@@ -438,6 +438,7 @@ const CorrectionsList = () => {
             <thead>
               <tr style={{ background: "#f8fafc" }}>
                 <th style={{ padding: "16px", textAlign: "left" }}>ID</th>
+                <th style={{ padding: "16px", textAlign: "left" }}>Étudiant</th>
                 <th style={{ padding: "16px", textAlign: "left" }}>Examen</th>
                 <th style={{ padding: "16px", textAlign: "left" }}>Matière</th>
                 <th style={{ padding: "16px", textAlign: "left" }}>Étudiant</th>
@@ -454,6 +455,7 @@ const CorrectionsList = () => {
                   style={{ borderBottom: "1px solid #e2e8f0" }}
                 >
                   <td style={{ padding: "16px" }}>#{copie.id}</td>
+                  <td style={{ padding: "16px" }}>{copie.student_name || `Étudiant #${copie.student_id}`}</td>
                   <td style={{ padding: "16px" }}>{copie.exam_title}</td>
                   <td style={{ padding: "16px" }}>
                     {copie.exam_matiere || "-"}

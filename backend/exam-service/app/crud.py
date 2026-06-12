@@ -122,6 +122,7 @@ def create_copie(db: Session, copie: schemas.CopieCreate):
     db_copie = models.CopieEtudiant(
         exam_id=copie.exam_id,
         student_id=copie.student_id,
+        student_name=copie.student_name,
         contenu_brut=copie.contenu_brut,
         reponses=copie.reponses,
         note=copie.note

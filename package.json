@@ -1,0 +1,28 @@
+{
+  "name": "educheck-ai",
+  "version": "1.0.0",
+  "description": "",
+  "main": "rapport.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EduCheck-AI/educheck_ai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EduCheck-AI/educheck_ai/issues"
+  },
+  "homepage": "https://github.com/EduCheck-AI/educheck_ai#readme",
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "docx": "^9.7.1"
+  }
+}

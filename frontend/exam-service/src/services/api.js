@@ -2,10 +2,40 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8002";
+const AI_GATEWAY_URL = "http://localhost:8014";
+
+const aiGatewayApi = axios.create({
+  baseURL: AI_GATEWAY_URL, 
+  headers: {"Content-Type": "application/json"},
+});
+
+aiGatewayApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access_token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const correctionIA = async (questionData) => {
+  try {
+    console.log("envoi a ai gateway, ", questionData);
+    const response = await aiGatewayApi.post("/ai/correct-question", questionData);
+  
+    const data = response.data;
+    
+    console.log("Reponse brute de l'ai gateway: ", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Erreur correction IA:", error);
+    throw error;
+  }
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // 🔥 ESSENTIEL pour envoyer les cookies
+  withCredentials: true, 
   headers: {
     "Content-Type": "application/json",
   },
@@ -88,7 +118,7 @@ export const getExam = async (id) => {
 };
 
 export const createExam = async (examData) => {
-  const response = await api.post("/exams/", examData);
+  const response = await api.post("/exams", examData);
   return response.data;
 };
 
@@ -161,17 +191,17 @@ export const getExamQuestions = async (examId) => {
 };
 
 export const createQuestion = async (questionData) => {
-  const response = await api.post("/exam/questions", questionData);
+  const response = await api.post("/questions", questionData);
   return response.data;
 };
 
 export const updateQuestion = async (id, questionData) => {
-  const response = await api.put(`/exam/questions/${id}`, questionData);
+  const response = await api.put(`/questions/${id}`, questionData);
   return response.data;
 };
 
 export const deleteQuestion = async (id) => {
-  const response = await api.delete(`/exam/questions/${id}`);
+  const response = await api.delete(`/questions/${id}`);
   return response.data;
 };
 

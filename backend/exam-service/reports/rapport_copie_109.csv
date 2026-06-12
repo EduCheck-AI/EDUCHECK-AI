@@ -1,0 +1,32 @@
+﻿====================================================================================================
+EDUCHECK AI - RAPPORT DE CORRECTION
+====================================================================================================
+
+1. INFORMATIONS GÉNÉRALES
+Copie ID;109
+Étudiant;Étudiant #1
+Examen;1- C'est quoi Laravel ?
+Matière;Général
+Date de soumission;09/06/2026 15:35
+Date du rapport;11/06/2026 18:22
+
+2. RÉSULTAT
+Note obtenue;1.50 / 6.00
+Pourcentage;25.0%
+Mention;Insuffisant
+
+3. DÉTAIL DES QUESTIONS
+
+N°;Question;Type;Points max;Points obtenus;Pourcentage;Statut;Réponse étudiant;Bonne réponse;Feedback
+1;C'est quoi Laravel ?;Ouverte;2.00;0.00;0%;Incorrect;- Laravel est un langage de programmation et PHP est son framework;Non spécifiée;La réponse fournie est incorrecte. Laravel est en réalité un framework PHP et non un langage de programmation. De plus, PHP est le langage de programmation utilisé, pas un framework de Laravel. Il faudrait clarifier que Laravel est un framework PHP populaire pour développer des applications web robustes et scalable.
+2;C'est quoi Python ?;Ouverte;2.00;0.00;0%;Incorrect;Non répondue;Non spécifiée;La réponse 'Python est un Edi' n'est pas pertinente et ne correspond pas à la question posée. Python est un langage de programmation informatique de haut niveau. Votre réponse est incorrecte et hors sujet.
+3;C'est quoi Node.js ?;Ouverte;2.00;1.50;75%;Partiel;Non répondue;Non spécifiée;Votre réponse est presque parfaite ! Vous avez bien identifié Node.js comme un environnement d'exécution JavaScript côté serveur. Cependant, pour une réponse complète, il aurait été idéal de mentionner qu'il est basé sur le moteur V8 de Google Chrome et qu'il permet de créer des applications serveur scalables et performantes. Votre réponse est pertinente mais pourrait bénéficier d'un peu plus de détails pour être considérée comme parfaite.
+
+4. STATISTIQUES
+Questions correctes;0/3;0.0%
+Questions partielles;1/3;33.3%
+Questions incorrectes;2/3;66.7%
+
+====================================================================================================
+Rapport généré par EduCheck AI - Correction automatique intelligente
+© 2026 - Tous droits réservés

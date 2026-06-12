@@ -48,56 +48,66 @@ export default function AuthPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-     navigate("/dashbord");
 
-    // Valider la taille du mot de passe avant l'envoi
-    if (!validatePassword(formData.password)) {
-      return;
-    }
-    
+    if (!validatePassword(formData.password)) return;
+
     setIsLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
     try {
+      // ✅ URLs depuis .env
+      const AUTH_URL =
+        process.env.REACT_APP_AUTH_URL || "http://localhost:8000";
+      const EXAM_URL =
+        process.env.REACT_APP_EXAM_URL || "http://localhost:3001";
+
       const url = isLogin
-        ? "http://127.0.0.1:8000/auth/login"
-        : "http://127.0.0.1:8000/auth/register";
+        ? `${AUTH_URL}/auth/login`
+        : `${AUTH_URL}/auth/register`;
 
       const bodyData = isLogin
-        ? {
-            email: formData.email,
-            password: formData.password
-          }
+        ? { email: formData.email, password: formData.password }
         : {
             full_name: formData.fullName,
             email: formData.email,
             password: formData.password,
-            role: formData.role
+            role: formData.role,
           };
 
       const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData)
+        credentials: "include",
+        body: JSON.stringify(bodyData),
       });
 
       const data = await response.json();
 
-     if (response.ok) {
-  const userName = data.user.full_name || data.user.name;
+      if (response.ok) {
+        if (!isLogin) {
+          setSuccess("Compte créé avec succès ! Connectez-vous.");
+          setIsLogin(true);
+          setIsLoading(false);
+          return;
+        }
 
-  localStorage.setItem("userName", userName);
+        // ✅ Stocker dans localStorage
+        localStorage.setItem("userName", data.user.full_name);
+        localStorage.setItem("userRole", data.user.role);
+        localStorage.setItem("userId", String(data.user.id));
 
-  navigate("/dashbord");
-}
-      else {
-        // Gestion des erreurs Pydantic (tableau d'objets)
+        if (data.user.role === "teacher") {
+          const params = new URLSearchParams({
+            userId: data.user.id,
+            userName: data.user.full_name,
+            userRole: data.user.role,
+          });
+          window.location.href = `${EXAM_URL}/exams?${params.toString()}`;
+        }
+      } else {
         if (Array.isArray(data.detail)) {
-          const errorMessages = data.detail
-            .map(err => `${err.loc[err.loc.length - 1]}: ${err.msg}`)
-            .join(", ");
-          setError(errorMessages);
+          setError(data.detail.map((err) => err.msg).join(", "));
         } else {
           setError(data.detail || "Erreur serveur");
         }

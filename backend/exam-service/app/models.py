@@ -48,7 +48,7 @@ class CopieEtudiant(Base):
     reponses = Column(JSON, nullable=True)  # Réponses structurées
     note = Column(DECIMAL(5,2), nullable=True)
     date_soumission = Column(DateTime(timezone=True), server_default=func.now())
-    
+    student_name = Column(String(255), nullable=True)
     # Relations
     examen = relationship("Examen", back_populates="copies")
     

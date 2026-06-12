@@ -48,47 +48,27 @@ def decode_token_locally(token: str) -> dict:
         )
 
 
-async def get_current_user_from_cookie(
-    request: Request,
-) -> dict:
-    """Récupère l'utilisateur depuis le cookie (production)"""
-
-    if settings.DEV_MODE:
-        return {
-            "id": 1,
-            "username": "prof_ayman",
-            "role": "teacher",
-            "email": "prof@educheck.ma",
-            "full_name": "Professeur Ayman",
-        }
-
-    # RÉCUPÉRER LE TOKEN DEPUIS LE COOKIE
-    token = request.cookies.get("access_token")
-
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token d'authentification manquant",
-        )
-
-    try:
-        # Vérifier le token localement
-        payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
-        )
-        return {
-            "id": payload.get("sub"),
-            "email": payload.get("email"),
-            "role": payload.get("role"),
-            "full_name": payload.get("full_name"),
-        }
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Session expirée")
-    except jwt.InvalidTokenError:
-        # Fallback: vérifier auprès de l'auth-service
-        return await verify_token_with_auth_service(token)
-
-
+async def get_current_user_from_cookie(request: Request) -> dict:
+    print("=" * 50)
+    print("🔍 get_current_user_from_cookie appelée")
+    print("🍪 Cookies:", dict(request.cookies))
+    
+    user_id = request.cookies.get("user_id")
+    user_role = request.cookies.get("user_role")
+    
+    print(f"📌 user_id = {user_id}")
+    print(f"📌 user_role = '{user_role}'")
+    print("=" * 50)
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Non connecté")
+    
+    return {
+        "id": int(user_id),
+        "role": user_role,
+        "full_name": request.cookies.get("user_name"),
+        "email": request.cookies.get("user_email"),
+    }
 async def get_current_user(
     request: Request,
 ) -> dict:

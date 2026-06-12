@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
 
-    DEV_MODE: bool = os.getenv("DEV_MODE", "True").lower() == "true"
+    DEV_MODE: bool = False
 
     # Application
     APP_NAME: str = "Exam Service"

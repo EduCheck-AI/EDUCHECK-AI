@@ -6,34 +6,59 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-// Ajouter ces imports
-import CorrectionsList from "./components/CorrectionsList";
-import ManualCorrection from "./components/ManualCorrection";
-
-// Composants
-import ProtectedRoute from "./components/ProtectedRoutes";
-import UploadCopies from "./components/UploadCopies";
-import Sidebar from "./components/Sidebar";
+import Navbar from "./components/Navbar";
 import ExamList from "./components/ExamList";
-import ExamForm from "./components/ExamForm";
 import ExamDetails from "./components/ExamDetails";
+import ExamForm from "./components/ExamForm";
 import ExamImport from "./components/ExamImport";
 import CorrectionsPage from "./components/CorrectionsPage";
-import StatistiquesPage from "./components/StatistiquesPage";
-import ParametresPage from "./components/ParametresPage";
-
+import CorrectionsList from "./components/CorrectionsList"; // ✅ ajouté
+import ManualCorrection from "./components/ManualCorrection"; // ✅ ajouté
+import StatistiquesAvancees  from "./components/StatistiquesPage";
+import UploadCopies from "./components/UploadCopies";
+import Sidebar from "./components/Sidebar";
+import ParametresPage from "./components/ParametresPage"; // ✅ ajouté
 import "./styles/main.css";
 import "./styles/Sidebar.css";
 import "./App.css";
-import Navbar from "./components/Navbar";
+
+// ✅ ProtectedRoute corrigé
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const params = new URLSearchParams(window.location.search);
+  const urlUserId = params.get("userId");
+  const urlUserName = params.get("userName");
+  const urlUserRole = params.get("userRole");
+
+  if (urlUserId) {
+    localStorage.setItem("userId", urlUserId);
+    localStorage.setItem("userName", urlUserName);
+    localStorage.setItem("userRole", urlUserRole);
+    window.history.replaceState({}, "", window.location.pathname);
+  }
+
+  const userId = localStorage.getItem("userId");
+  const userRole = localStorage.getItem("userRole");
+
+  if (!userId) {
+    window.location.href = "http://localhost:3000";
+    return null;
+  }
+
+  // ✅ Vérifier le rôle
+  if (requiredRole && userRole !== requiredRole) {
+    window.location.href = "http://localhost:3000";
+    return null;
+  }
+
+  return children;
+};
 
 function App() {
   return (
     <Router>
-      <div className="navbar" />
       <Navbar />
       <div className="app-with-sidebar">
-        <Sidebar />
+        <Sidebar /> {/* ✅ une seule fois */}
         <main className="main-content-with-sidebar">
           <Toaster
             position="top-right"
@@ -46,23 +71,7 @@ function App() {
           />
           <div className="content-wrapper">
             <Routes>
-              <Route
-                path="/exams/:id/upload"
-                element={
-                  <ProtectedRoute requiredRole="teacher">
-                    <UploadCopies />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute requiredRole="teacher">
-                    <Navigate to="/exams" />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/" element={<Navigate to="/exams" />} />
 
               <Route
                 path="/exams"
@@ -110,28 +119,19 @@ function App() {
               />
 
               <Route
-                path="/statistiques"
+                path="/exams/:id/upload"
                 element={
                   <ProtectedRoute requiredRole="teacher">
-                    <StatistiquesPage />
+                    <UploadCopies />
                   </ProtectedRoute>
                 }
               />
 
               <Route
-                path="/parametres"
-                element={
-                  <ProtectedRoute requiredRole="teacher">
-                    <ParametresPage />
-                  </ProtectedRoute>
-                }
-              />
-              
-              <Route
                 path="/corrections"
                 element={
                   <ProtectedRoute requiredRole="teacher">
-                    <CorrectionsList />{" "}
+                    <CorrectionsList />
                   </ProtectedRoute>
                 }
               />
@@ -144,6 +144,26 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              <Route
+                path="/statistiques"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <StatistiquesAvancees />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/parametres"
+                element={
+                  <ProtectedRoute requiredRole="teacher">
+                    <ParametresPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<Navigate to="/exams" />} />
             </Routes>
           </div>
         </main>

@@ -28,8 +28,24 @@ const emptyQuestion = () => ({
   ordre: 0,
   choix: ["", "", "", ""],
   bonneReponse: 0,
-  reponse_attendue: "", // ← NOUVEAU CHAMP
+  reponse_attendue: "",
 });
+
+// Fonction pour lire les cookies
+const getCookie = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
+// Récupérer l'ID utilisateur depuis les cookies
+const getCurrentUserId = () => {
+  const userId = getCookie("user_id");
+  if (userId) return parseInt(userId);
+  // Fallback pour développement
+  return 1;
+};
 
 // ── Inline Question Editor ──
 const QuestionEditor = ({ q, index, onChange, onRemove }) => {
@@ -73,9 +89,7 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
           <button
             type="button"
             className="qe-pts-btn"
-            onClick={() =>
-              set("points", Math.max(0.5, parseFloat(q.points) - 0.5))
-            }
+            onClick={() => set("points", Math.max(0.5, parseFloat(q.points) - 0.5))}
           >
             −
           </button>
@@ -83,9 +97,7 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
           <button
             type="button"
             className="qe-pts-btn"
-            onClick={() =>
-              set("points", Math.min(20, parseFloat(q.points) + 0.5))
-            }
+            onClick={() => set("points", Math.min(20, parseFloat(q.points) + 0.5))}
           >
             +
           </button>
@@ -113,18 +125,10 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
           }
         />
 
-        {/* ── CHAMP RÉPONSE ATTENDUE (pour Calcul et Ouverte) ── */}
         {(q.type_question === "calcul" || q.type_question === "ouverte") && (
           <div className="qe-reponse-section" style={{ marginTop: "16px" }}>
-            <label
-              className="qe-reponse-label"
-              style={{
-                fontWeight: "500",
-                display: "block",
-                marginBottom: "8px",
-              }}
-            >
-              📝 Réponse attendue :
+            <label className="qe-reponse-label" style={{ fontWeight: "500", display: "block", marginBottom: "8px" }}>
+              Réponse attendue <span style={{ color: "#ef4444" }}>*</span>
             </label>
             <textarea
               value={q.reponse_attendue || ""}
@@ -136,17 +140,14 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
                 width: "100%",
                 padding: "10px",
                 borderRadius: "8px",
-                border: "1px solid #e2e8f0",
+                border: q.reponse_attendue ? "1px solid #10b981" : "1px solid #ef4444",
                 resize: "vertical",
               }}
             />
-            <small style={{ color: "#64748b", fontSize: "12px" }}>
-              Cette réponse servira de référence pour la correction automatique.
-            </small>
+            
           </div>
         )}
 
-        {/* ── CHOIX QCM ── */}
         {q.type_question === "qcm" && (
           <div className="qe-choix-section">
             <div className="qe-choix-label">
@@ -157,10 +158,7 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
             </div>
             <div className="qe-choix-list">
               {q.choix.map((c, i) => (
-                <div
-                  key={i}
-                  className={`qe-choix-row ${q.bonneReponse === i ? "correct" : ""}`}
-                >
+                <div key={i} className={`qe-choix-row ${q.bonneReponse === i ? "correct" : ""}`}>
                   <button
                     type="button"
                     className={`qe-letter ${q.bonneReponse === i ? "correct" : ""}`}
@@ -176,22 +174,14 @@ const QuestionEditor = ({ q, index, onChange, onRemove }) => {
                     placeholder={`Choix ${LETTRES[i]}...`}
                   />
                   {q.choix.length > 2 && (
-                    <button
-                      type="button"
-                      className="qe-choix-del"
-                      onClick={() => removeChoix(i)}
-                    >
+                    <button type="button" className="qe-choix-del" onClick={() => removeChoix(i)}>
                       <FaTrash />
                     </button>
                   )}
                 </div>
               ))}
               {q.choix.length < 6 && (
-                <button
-                  type="button"
-                  className="qe-add-choix"
-                  onClick={addChoix}
-                >
+                <button type="button" className="qe-add-choix" onClick={addChoix}>
                   <FaPlus /> Ajouter un choix
                 </button>
               )}
@@ -218,7 +208,6 @@ const ExamForm = () => {
     titre: "",
     description: "",
     matiere: "",
-    id_enseignant: 1,
     points_totaux: 20,
     statut: "brouillon",
     contenu_brut: null,
@@ -252,7 +241,6 @@ const ExamForm = () => {
                 bonneReponse = p.bonne_reponse ?? 0;
               } catch {}
             } else if (q.reponse_correcte) {
-              // Pour les questions calcul/ouverte
               reponseAttendue = q.reponse_correcte;
             }
 
@@ -302,6 +290,17 @@ const ExamForm = () => {
       return;
     }
 
+    for (const q of validQuestions) {
+      
+      if (q.type_question === "qcm") {
+        const choixValides = q.choix.filter(c => c.trim()).length;
+        if (choixValides < 2) {
+          toast.error(`Le QCM "${q.texte.substring(0, 50)}..." doit avoir au moins 2 choix`);
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     try {
       let examId = id;
@@ -310,7 +309,15 @@ const ExamForm = () => {
       if (id) {
         await api.updateExam(id, examData);
       } else {
-        const created = await api.createExam(examData);
+        // 🔥 Récupérer l'ID utilisateur depuis les cookies
+        const userId = getCurrentUserId();
+        
+        const examToCreate = {
+          ...examData,
+          id_enseignant: userId,  // ← ID dynamique !
+        };
+        
+        const created = await api.createExam(examToCreate);
         examId = created.id;
       }
 
@@ -335,7 +342,6 @@ const ExamForm = () => {
             bonne_reponse: q.bonneReponse,
           });
         } else if (q.reponse_attendue && q.reponse_attendue.trim()) {
-          // Pour calcul et ouverte, stocker la réponse attendue directement
           reponseCorrecte = q.reponse_attendue.trim();
         }
 
@@ -371,9 +377,7 @@ const ExamForm = () => {
     <div className="ef-page fade-in">
       {/* Stepper */}
       <div className="ef-stepper">
-        <div
-          className={`ef-step ${step >= 1 ? "active" : ""} ${step > 1 ? "done" : ""}`}
-        >
+        <div className={`ef-step ${step >= 1 ? "active" : ""} ${step > 1 ? "done" : ""}`}>
           <div className="ef-step-circle">{step > 1 ? <FaCheck /> : "1"}</div>
           <span>Informations</span>
         </div>
@@ -388,6 +392,7 @@ const ExamForm = () => {
       {step === 1 && (
         <div className="ef-layout fade-in">
           <div className="ef-left">
+            {/* ... reste du code identique ... */}
             <div className="ef-card">
               <div className="ef-card-head">
                 <span className="ef-card-num">1</span>
@@ -395,9 +400,7 @@ const ExamForm = () => {
               </div>
               <div className="ef-card-body">
                 <div className="ef-field">
-                  <label>
-                    Titre <span className="ef-required">*</span>
-                  </label>
+                  <label>Titre <span className="ef-required">*</span></label>
                   <input
                     type="text"
                     value={examData.titre}
@@ -408,9 +411,7 @@ const ExamForm = () => {
                   />
                 </div>
                 <div className="ef-field">
-                  <label>
-                    Description <span className="ef-optional">optionnel</span>
-                  </label>
+                  <label>Description <span className="ef-optional">optionnel</span></label>
                   <textarea
                     value={examData.description || ""}
                     onChange={(e) => setField("description", e.target.value)}
@@ -429,9 +430,7 @@ const ExamForm = () => {
               </div>
               <div className="ef-card-body">
                 <div className="ef-field">
-                  <label>
-                    Nom de la matière <span className="ef-required">*</span>
-                  </label>
+                  <label>Nom de la matière <span className="ef-required">*</span></label>
                   <input
                     type="text"
                     value={examData.matiere}
@@ -453,9 +452,7 @@ const ExamForm = () => {
                   <label>Points totaux</label>
                   <div className="ef-points-wrap">
                     <div className="ef-points-display">
-                      <span className="ef-points-num">
-                        {examData.points_totaux}
-                      </span>
+                      <span className="ef-points-num">{examData.points_totaux}</span>
                       <span className="ef-points-unit">pts</span>
                     </div>
                     <div className="ef-slider-wrap">
@@ -466,9 +463,7 @@ const ExamForm = () => {
                         max="100"
                         step="1"
                         value={examData.points_totaux}
-                        onChange={(e) =>
-                          setField("points_totaux", Number(e.target.value))
-                        }
+                        onChange={(e) => setField("points_totaux", Number(e.target.value))}
                         className="ef-slider"
                       />
                       <span className="ef-slider-max">100</span>
@@ -479,18 +474,8 @@ const ExamForm = () => {
                   <label>Statut</label>
                   <div className="ef-statut-wrap">
                     {[
-                      {
-                        val: "brouillon",
-                        dot: "draft",
-                        label: "Brouillon",
-                        desc: "Non visible",
-                      },
-                      {
-                        val: "publié",
-                        dot: "pub",
-                        label: "Publié",
-                        desc: "Visible aux étudiants",
-                      },
+                      { val: "brouillon", dot: "draft", label: "Brouillon", desc: "Non visible" },
+                      { val: "publié", dot: "pub", label: "Publié", desc: "Visible aux étudiants" },
                     ].map((s) => (
                       <button
                         key={s.val}
@@ -516,32 +501,22 @@ const ExamForm = () => {
             <div className="ef-preview-card">
               <div className="ef-preview-label">Aperçu</div>
               <div className="ef-preview-body">
-                <div
-                  className={`ef-preview-title ${!examData.titre ? "empty" : ""}`}
-                >
+                <div className={`ef-preview-title ${!examData.titre ? "empty" : ""}`}>
                   {examData.titre || "Titre de l'examen..."}
                 </div>
                 <div className="ef-preview-tags">
                   {examData.matiere ? (
-                    <span className="ef-preview-tag matiere">
-                      {examData.matiere}
-                    </span>
+                    <span className="ef-preview-tag matiere">{examData.matiere}</span>
                   ) : (
-                    <span className="ef-preview-tag empty-tag">
-                      Matière non choisie
-                    </span>
+                    <span className="ef-preview-tag empty-tag">Matière non choisie</span>
                   )}
-                  <span
-                    className={`ef-preview-tag statut ${examData.statut === "publié" ? "pub" : "draft"}`}
-                  >
+                  <span className={`ef-preview-tag statut ${examData.statut === "publié" ? "pub" : "draft"}`}>
                     {examData.statut === "publié" ? "● Publié" : "● Brouillon"}
                   </span>
                 </div>
                 <div className="ef-preview-divider" />
                 <div className="ef-preview-pts-row">
-                  <span className="ef-preview-pts-num">
-                    {examData.points_totaux}
-                  </span>
+                  <span className="ef-preview-pts-num">{examData.points_totaux}</span>
                   <span className="ef-preview-pts-label">points</span>
                 </div>
               </div>
@@ -551,10 +526,7 @@ const ExamForm = () => {
                   { done: !!examData.matiere, label: "Matière sélectionnée" },
                   { done: examData.statut === "publié", label: "Publié" },
                 ].map((c, i) => (
-                  <div
-                    key={i}
-                    className={`ef-check-item ${c.done ? "done" : ""}`}
-                  >
+                  <div key={i} className={`ef-check-item ${c.done ? "done" : ""}`}>
                     <span className="ef-check-icon">{c.done ? "✓" : "○"}</span>
                     {c.label}
                   </div>
@@ -576,11 +548,7 @@ const ExamForm = () => {
                 {totalPtsQuestions.toFixed(1)} pts au total
               </p>
             </div>
-            <button
-              type="button"
-              className="ef-btn-add-q"
-              onClick={addQuestion}
-            >
+            <button type="button" className="ef-btn-add-q" onClick={addQuestion}>
               <FaPlus /> Ajouter une question
             </button>
           </div>
@@ -603,20 +571,12 @@ const ExamForm = () => {
       <div className="ef-nav">
         <div className="ef-nav-left">
           {step === 2 && (
-            <button
-              type="button"
-              className="ef-btn-cancel"
-              onClick={() => setStep(1)}
-            >
+            <button type="button" className="ef-btn-cancel" onClick={() => setStep(1)}>
               <FaChevronLeft /> Retour
             </button>
           )}
           {step === 1 && (
-            <button
-              type="button"
-              className="ef-btn-cancel"
-              onClick={() => navigate("/exams")}
-            >
+            <button type="button" className="ef-btn-cancel" onClick={() => navigate("/exams")}>
               Annuler
             </button>
           )}

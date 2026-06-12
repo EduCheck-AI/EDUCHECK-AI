@@ -4,25 +4,34 @@ Groq (llama-4-scout vision) + pdflatex
 - /ocr/process     → texte propre pour la DB
 - /ocr/process-pdf → PDF LaTeX avec vraies formules
 """
-
+import numpy as np
 import io, os, re, logging, base64, tempfile, subprocess, shutil
 from PIL import Image
 import httpx
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from pydantic import BaseModel
+from typing import Optional, List
+import pytesseract
+from PIL import ImageEnhance, ImageFilter
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY  = os.getenv("GROQ_API_KEY", "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")
-PDFLATEX_PATH = os.getenv("PDFLATEX_PATH",
-    r"C:\Users\souso\AppData\Local\Programs\MiKTeXb\miktex\bin\x64\pdflatex.exe")
+GROQ_API_KEY = os.getenv(
+    "GROQ_API_KEY", "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"
+)
+PDFLATEX_PATH = os.getenv(
+    "PDFLATEX_PATH",
+    r"C:\Users\souso\AppData\Local\Programs\MiKTeXb\miktex\bin\x64\pdflatex.exe",
+)
 
 
 # ════════════════════════════════════════════════════════
 # UTILITAIRES
 # ════════════════════════════════════════════════════════
+
 
 def est_image(contents: bytes, content_type: str = "") -> bool:
     """Vérifie si le contenu est une image ou du texte"""
@@ -30,21 +39,21 @@ def est_image(contents: bytes, content_type: str = "") -> bool:
         return False
     # Détecter par magic bytes
     signatures = [
-        b'\xff\xd8\xff',       # JPEG
-        b'\x89PNG',            # PNG
-        b'GIF8',               # GIF
-        b'BM',                 # BMP
-        b'\x00\x00\x01\x00',   # ICO
+        b"\xff\xd8\xff",  # JPEG
+        b"\x89PNG",  # PNG
+        b"GIF8",  # GIF
+        b"BM",  # BMP
+        b"\x00\x00\x01\x00",  # ICO
     ]
     for sig in signatures:
-        if contents[:len(sig)] == sig:
+        if contents[: len(sig)] == sig:
             return True
     # Si ça ressemble à du texte lisible
     try:
-        contents[:200].decode('utf-8')
+        contents[:200].decode("utf-8")
         return False  # C'est du texte
     except UnicodeDecodeError:
-        return True   # Probablement binaire = image/pdf
+        return True  # Probablement binaire = image/pdf
 
 
 def preparer_image(contents: bytes) -> str:
@@ -60,6 +69,7 @@ def preparer_image(contents: bytes) -> str:
 def pdf_vers_image(contents: bytes) -> bytes:
     """Convertit la première page d'un PDF en PNG"""
     from pdf2image import convert_from_bytes
+
     pages = convert_from_bytes(contents, first_page=1, last_page=1)
     if not pages:
         raise HTTPException(status_code=400, detail="PDF invalide")
@@ -70,46 +80,60 @@ def pdf_vers_image(contents: bytes) -> bytes:
 
 def nettoyer_texte(texte: str) -> str:
     """Nettoie Markdown et LaTeX du texte Groq"""
-    texte = re.sub(r'```[a-z]*\n?', '', texte)
-    texte = re.sub(r'```', '', texte)
-    texte = re.sub(r'^#{1,6}\s+', '', texte, flags=re.MULTILINE)
-    texte = re.sub(r'\*\*([^*]+)\*\*', r'\1', texte)
-    texte = re.sub(r'\*([^*]+)\*', r'\1', texte)
+    texte = re.sub(r"```[a-z]*\n?", "", texte)
+    texte = re.sub(r"```", "", texte)
+    texte = re.sub(r"^#{1,6}\s+", "", texte, flags=re.MULTILINE)
+    texte = re.sub(r"\*\*([^*]+)\*\*", r"\1", texte)
+    texte = re.sub(r"\*([^*]+)\*", r"\1", texte)
 
     def latex_vers_lisible(s):
-        s = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'(\1)/(\2)', s)
-        s = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', s)
-        s = re.sub(r'_\{([^}]+)\}', r'_(\1)', s)
-        s = re.sub(r'\^\{([^}]+)\}', r'^(\1)', s)
-        s = re.sub(r'\\lim_\{([^}]+)\}', r'lim_(\1)', s)
-        s = re.sub(r'\\to', '->', s)
-        s = re.sub(r'\\mathbb\{([^}]+)\}', r'I\1', s)
+        s = re.sub(r"\\frac\{([^}]+)\}\{([^}]+)\}", r"(\1)/(\2)", s)
+        s = re.sub(r"\\sqrt\{([^}]+)\}", r"sqrt(\1)", s)
+        s = re.sub(r"_\{([^}]+)\}", r"_(\1)", s)
+        s = re.sub(r"\^\{([^}]+)\}", r"^(\1)", s)
+        s = re.sub(r"\\lim_\{([^}]+)\}", r"lim_(\1)", s)
+        s = re.sub(r"\\to", "->", s)
+        s = re.sub(r"\\mathbb\{([^}]+)\}", r"I\1", s)
         for old, new in [
-            (r'\\infty', '+inf'), (r'\\leq', '<='), (r'\\geq', '>='),
-            (r'\\neq', '!='), (r'\\ln', 'ln'), (r'\\log', 'log'),
-            (r'\\forall', 'pour tout'), (r'\\exists', 'il existe'),
-            (r'\\in', ' dans '), (r'\\alpha', 'alpha'), (r'\\beta', 'beta'),
-            (r'\\gamma', 'gamma'), (r'\\pi', 'pi'), (r'\\prime', "'"),
-            (r'\\cdot', '.'), (r'\\times', 'x'),
+            (r"\\infty", "+inf"),
+            (r"\\leq", "<="),
+            (r"\\geq", ">="),
+            (r"\\neq", "!="),
+            (r"\\ln", "ln"),
+            (r"\\log", "log"),
+            (r"\\forall", "pour tout"),
+            (r"\\exists", "il existe"),
+            (r"\\in", " dans "),
+            (r"\\alpha", "alpha"),
+            (r"\\beta", "beta"),
+            (r"\\gamma", "gamma"),
+            (r"\\pi", "pi"),
+            (r"\\prime", "'"),
+            (r"\\cdot", "."),
+            (r"\\times", "x"),
         ]:
             s = s.replace(old, new)
-        s = re.sub(r'\\[a-zA-Z]+\{([^}]*)\}', r'\1', s)
-        s = re.sub(r'\\[a-zA-Z]+', '', s)
-        s = re.sub(r'[{}]', '', s)
+        s = re.sub(r"\\[a-zA-Z]+\{([^}]*)\}", r"\1", s)
+        s = re.sub(r"\\[a-zA-Z]+", "", s)
+        s = re.sub(r"[{}]", "", s)
         return s.strip()
 
-    texte = re.sub(r'\\\[(.*?)\\\]',
-        lambda m: '\n' + latex_vers_lisible(m.group(1)) + '\n',
-        texte, flags=re.DOTALL)
-    texte = re.sub(r'\$([^$]+)\$', lambda m: latex_vers_lisible(m.group(1)), texte)
-    texte = re.sub(r' {2,}', ' ', texte)
-    texte = re.sub(r'\n{3,}', '\n\n', texte)
+    texte = re.sub(
+        r"\\\[(.*?)\\\]",
+        lambda m: "\n" + latex_vers_lisible(m.group(1)) + "\n",
+        texte,
+        flags=re.DOTALL,
+    )
+    texte = re.sub(r"\$([^$]+)\$", lambda m: latex_vers_lisible(m.group(1)), texte)
+    texte = re.sub(r" {2,}", " ", texte)
+    texte = re.sub(r"\n{3,}", "\n\n", texte)
     return texte.strip()
 
 
 # ════════════════════════════════════════════════════════
 # GROQ — TEXTE PROPRE (depuis image)
 # ════════════════════════════════════════════════════════
+
 
 async def groq_texte_depuis_image(b64: str) -> str:
     prompt = """Tu es un expert OCR d'examens.
@@ -134,16 +158,27 @@ RÈGLES STRICTES :
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}",
-                     "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
             json={
                 "model": "meta-llama/llama-4-scout-17b-16e-instruct",
-                "messages": [{"role": "user", "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}}
-                ]}],
-                "max_tokens": 4000, "temperature": 0
-            }
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{b64}"},
+                            },
+                        ],
+                    }
+                ],
+                "max_tokens": 4000,
+                "temperature": 0,
+            },
         )
     if r.status_code != 200:
         raise HTTPException(status_code=502, detail=f"Groq: {r.text}")
@@ -154,6 +189,7 @@ RÈGLES STRICTES :
 # ════════════════════════════════════════════════════════
 # GROQ — LATEX POUR PDF (depuis image OU texte)
 # ════════════════════════════════════════════════════════
+
 
 async def groq_latex_depuis_image(b64: str) -> str:
     """Image → LaTeX via Groq vision"""
@@ -172,23 +208,34 @@ RÈGLES :
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}",
-                     "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
             json={
                 "model": "meta-llama/llama-4-scout-17b-16e-instruct",
-                "messages": [{"role": "user", "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}}
-                ]}],
-                "max_tokens": 4000, "temperature": 0
-            }
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{b64}"},
+                            },
+                        ],
+                    }
+                ],
+                "max_tokens": 4000,
+                "temperature": 0,
+            },
         )
     if r.status_code != 200:
         raise HTTPException(status_code=502, detail=f"Groq: {r.text}")
 
     contenu = r.json()["choices"][0]["message"]["content"].strip()
-    contenu = re.sub(r'```latex\n?|```', '', contenu).strip()
-    m = re.search(r'\\begin\{document\}(.*?)\\end\{document\}', contenu, re.DOTALL)
+    contenu = re.sub(r"```latex\n?|```", "", contenu).strip()
+    m = re.search(r"\\begin\{document\}(.*?)\\end\{document\}", contenu, re.DOTALL)
     return m.group(1).strip() if m else contenu
 
 
@@ -216,20 +263,23 @@ et sans ajouter cette phrase à ta réponse : "Voici le code LaTeX propre "
     async with httpx.AsyncClient(timeout=60.0) as client:
         r = await client.post(
             "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}",
-                     "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
             json={
                 "model": "meta-llama/llama-4-scout-17b-16e-instruct",
                 "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": 4000, "temperature": 0
-            }
+                "max_tokens": 4000,
+                "temperature": 0,
+            },
         )
     if r.status_code != 200:
         raise HTTPException(status_code=502, detail=f"Groq: {r.text}")
 
     contenu = r.json()["choices"][0]["message"]["content"].strip()
-    contenu = re.sub(r'```latex\n?|```', '', contenu).strip()
-    m = re.search(r'\\begin\{document\}(.*?)\\end\{document\}', contenu, re.DOTALL)
+    contenu = re.sub(r"```latex\n?|```", "", contenu).strip()
+    m = re.search(r"\\begin\{document\}(.*?)\\end\{document\}", contenu, re.DOTALL)
     return m.group(1).strip() if m else contenu
 
 
@@ -237,14 +287,14 @@ et sans ajouter cette phrase à ta réponse : "Voici le code LaTeX propre "
 # PDFLATEX
 # ════════════════════════════════════════════════════════
 
+
 def compiler_pdf(corps_latex: str) -> bytes:
     tmpdir = tempfile.mkdtemp()
     try:
         tex_path = os.path.join(tmpdir, "examen.tex")
         pdf_path = os.path.join(tmpdir, "examen.pdf")
 
-        document = (
-            r"""\documentclass[12pt,a4paper]{article}
+        document = (r"""\documentclass[12pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
@@ -257,26 +307,34 @@ def compiler_pdf(corps_latex: str) -> bytes:
 \titleformat{\section}[block]{\large\bfseries\color{blue!70!black}}{}{0em}{}[\titlerule]
 \titleformat{\subsection}[block]{\normalsize\bfseries\color{blue!50!black}}{}{0em}{}
 \begin{document}
-"""
-        ) + corps_latex + "\n\\end{document}\n"
+""") + corps_latex + "\n\\end{document}\n"
 
-        with open(tex_path, 'w', encoding='utf-8') as f:
+        with open(tex_path, "w", encoding="utf-8") as f:
             f.write(document)
 
         result = None
         for _ in range(2):
             result = subprocess.run(
-                [PDFLATEX_PATH, "-interaction=nonstopmode",
-                 "-output-directory", tmpdir, tex_path],
-                capture_output=True, text=True, timeout=300, cwd=tmpdir
+                [
+                    PDFLATEX_PATH,
+                    "-interaction=nonstopmode",
+                    "-output-directory",
+                    tmpdir,
+                    tex_path,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                cwd=tmpdir,
             )
 
         if not os.path.exists(pdf_path):
             log = (result.stdout + result.stderr) if result else "Pas de log"
-            raise HTTPException(status_code=500,
-                detail=f"pdflatex échoué:\n{log[-2000:]}")
+            raise HTTPException(
+                status_code=500, detail=f"pdflatex échoué:\n{log[-2000:]}"
+            )
 
-        with open(pdf_path, 'rb') as f:
+        with open(pdf_path, "rb") as f:
             return f.read()
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
@@ -287,28 +345,143 @@ def compiler_pdf(corps_latex: str) -> bytes:
 # ════════════════════════════════════════════════════════
 
 app = FastAPI(title="OCR Service", version="3.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"],
-                   allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
+
+# ════════════════════════════════════════════════════════
+# FONCTIONS TESSERACT
+# ════════════════════════════════════════════════════════
+
+def pretraiter_pour_tesseract(contents: bytes) -> Image.Image:
+    """Prétraite l'image pour Tesseract"""
+    img = Image.open(io.BytesIO(contents))
+    # Niveaux de gris
+    img = img.convert('L')
+    # Augmenter le contraste
+    enhancer = ImageEnhance.Contrast(img)
+    img = enhancer.enhance(2.0)
+    # Nettoyer le bruit
+    img = img.filter(ImageFilter.MedianFilter())
+    return img
+
+async def tesseract_extraire_texte(contents: bytes) -> dict:
+    """Extrait le texte avec Tesseract"""
+    try:
+        img = pretraiter_pour_tesseract(contents)
+        texte = pytesseract.image_to_string(img, lang='fra')
+        return {
+            "success": True,
+            "text": texte.strip(),
+            "length": len(texte.strip()),
+            "source": "tesseract"
+        }
+    except Exception as e:
+        logger.error(f"Tesseract erreur: {e}")
+        return {"success": False, "text": "", "source": "tesseract", "error": str(e)}
+
+
+# ════════════════════════════════════════════════════════
+# NOUVELLE ROUTE : TESSERACT SEUL
+# ════════════════════════════════════════════════════════
+
+@app.post("/ocr/process-tesseract")
+async def process_tesseract(file: UploadFile = File(...)):
+    """OCR avec Tesseract uniquement (rapide, texte imprimé)"""
+    try:
+        logger.info(f"📖 OCR Tesseract: {file.filename}")
+        contents = await file.read()
+        
+        if file.content_type == "application/pdf":
+            contents = pdf_vers_image(contents)
+        
+        result = await tesseract_extraire_texte(contents)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ════════════════════════════════════════════════════════
+# NOUVELLE ROUTE : CHOIX AUTOMATIQUE
+# ════════════════════════════════════════════════════════
+
+def detecter_meilleure_ocr(contents: bytes) -> str:
+    """
+    Détecte quelle OCR utiliser
+    - "tesseract" : image nette, texte imprimé
+    - "groq" : image floue, manuscrit, formules
+    """
+    try:
+        img = Image.open(io.BytesIO(contents))
+        # Vérifier la netteté
+        img_array = np.array(img.convert('L'))
+        laplacian_var = np.var(np.gradient(np.gradient(img_array)))
+        
+        if laplacian_var > 50:
+            return "tesseract"
+        else:
+            return "groq"
+    except:
+        return "groq"
+
+@app.post("/ocr/process-auto")
+async def process_auto(file: UploadFile = File(...)):
+    """Choix automatique entre Tesseract et Groq"""
+    try:
+        logger.info(f"🔄 OCR Auto: {file.filename}")
+        contents = await file.read()
+        
+        if file.content_type == "application/pdf":
+            contents = pdf_vers_image(contents)
+        
+        choix = detecter_meilleure_ocr(contents)
+        logger.info(f"   Choix: {choix}")
+        
+        if choix == "tesseract":
+            result = await tesseract_extraire_texte(contents)
+        else:
+            b64 = preparer_image(contents)
+            texte = await groq_texte_depuis_image(b64)
+            result = {"success": True, "text": texte, "source": "groq"}
+        
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    
 @app.get("/")
 async def root():
     return {
-        "service": "OCR Service", "version": "3.0.0",
+        "service": "OCR Service",
+        "version": "3.0.0",
         "endpoints": {
-            "POST /ocr/process":      "Image → texte propre (pour DB)",
-            "POST /ocr/process-pdf":  "Image ou texte → PDF LaTeX (pour export)",
-            "POST /ocr/process-batch":"Plusieurs images → textes",
-        }
+            "POST /ocr/process": "Image → texte propre (pour DB)",
+            "POST /ocr/process-pdf": "Image ou texte → PDF LaTeX (pour export)",
+            "POST /ocr/process-batch": "Plusieurs images → textes",
+        },
     }
 
 
 @app.get("/health")
 async def health():
     return {
-        "status": "healthy" if GROQ_API_KEY != "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" else "degraded",
-        "groq": GROQ_API_KEY != "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",
-        "pdflatex": os.path.exists(PDFLATEX_PATH)
+        "status": (
+            "healthy"
+            if GROQ_API_KEY
+            != "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"
+            else "degraded"
+        ),
+        "groq": GROQ_API_KEY
+        != "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",
+        "pdflatex": os.path.exists(PDFLATEX_PATH),
     }
 
 
@@ -327,8 +500,12 @@ async def process_image(file: UploadFile = File(...)):
         b64 = preparer_image(contents)
         texte = await groq_texte_depuis_image(b64)
         logger.info(f"{len(texte)} chars extraits")
-        return {"success": True, "filename": file.filename,
-                "text": texte, "length": len(texte)}
+        return {
+            "success": True,
+            "filename": file.filename,
+            "text": texte,
+            "length": len(texte),
+        }
 
     except HTTPException:
         raise
@@ -363,20 +540,20 @@ async def process_to_pdf(file: UploadFile = File(...)):
         # CAS 3 : Texte brut (envoyé par exam-service) → convertir en LaTeX
         else:
             try:
-                texte = contents.decode('utf-8')
+                texte = contents.decode("utf-8")
             except UnicodeDecodeError:
-                texte = contents.decode('latin-1')
+                texte = contents.decode("latin-1")
             logger.info(f"📝 Texte reçu ({len(texte)} chars) → conversion LaTeX")
             corps_latex = await groq_latex_depuis_texte(texte)
 
         pdf_bytes = compiler_pdf(corps_latex)
-        nom = file.filename.rsplit('.', 1)[0]
+        nom = file.filename.rsplit(".", 1)[0]
         logger.info(f"✅ PDF généré — {len(pdf_bytes)} bytes")
 
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f"attachment; filename={nom}_ocr.pdf"}
+            headers={"Content-Disposition": f"attachment; filename={nom}_ocr.pdf"},
         )
 
     except HTTPException:
@@ -384,6 +561,64 @@ async def process_to_pdf(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"❌ {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ════════════════════════════════════════════════════════
+# EXTRACTION DES RÉPONSES DEPUIS LE TEXTE OCR
+# ════════════════════════════════════════════════════════
+
+
+def extraire_reponses_ocr(texte_ocr: str, questions: list) -> dict:
+    """Extrait les réponses depuis le texte OCR"""
+    reponses = {}
+    lettres_qcm = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4, "F": 5}
+    lignes = texte_ocr.split("\n")
+
+    qcm_questions = [
+        q for q in questions if hasattr(q, "type_question") and q.type_question == "qcm"
+    ]
+    autres_questions = [
+        q
+        for q in questions
+        if hasattr(q, "type_question") and q.type_question in ("ouverte", "calcul")
+    ]
+
+    # 1. Extraction QCM
+    for i, question in enumerate(qcm_questions):
+        for ligne in lignes:
+            patterns = [
+                rf"{i+1}[\.\)\s:]*([A-F])",
+                rf"Q{i+1}[\.\)\s:]*([A-F])",
+                rf"question\s*{i+1}[\.\)\s:]*([A-F])",
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, ligne, re.IGNORECASE)
+                if match:
+                    lettre = match.group(1).upper()
+                    if lettre in lettres_qcm:
+                        reponses[str(question.id)] = lettres_qcm[lettre]
+                        break
+            if str(question.id) in reponses:
+                break
+
+    # 2. Extraction simple pour les autres questions
+    for i, question in enumerate(autres_questions):
+        for j, ligne in enumerate(lignes):
+            if re.search(rf"^{i+1}[\.\)\s:]", ligne.strip()):
+                # Prendre le contenu après le numéro
+                reponse = re.sub(rf"^{i+1}[\.\)\s:]*", "", ligne).strip()
+                if reponse:
+                    reponses[str(question.id)] = reponse
+                    break
+            elif j > 0 and i < len(lignes) - 1:
+                # Chercher des mots-clés
+                if hasattr(question, "texte"):
+                    mots = question.texte.lower().split()[:3]
+                    if any(mot in ligne.lower() for mot in mots):
+                        reponses[str(question.id)] = ligne.strip()
+                        break
+
+    return reponses
 
 
 @app.post("/ocr/process-batch")
@@ -399,13 +634,20 @@ async def process_batch(files: list[UploadFile] = File(...)):
             texte = await groq_texte_depuis_image(b64)
             results.append({"filename": file.filename, "success": True, "text": texte})
         except Exception as e:
-            results.append({"filename": file.filename, "success": False, "error": str(e)})
+            results.append(
+                {"filename": file.filename, "success": False, "error": str(e)}
+            )
     return {"success": True, "count": len(results), "results": results}
 
 
 if __name__ == "__main__":
     import uvicorn
+
     print("🚀 OCR Service v3.0 → http://localhost:8003")
-    print(f"   Groq     : {'✅' if GROQ_API_KEY != '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' else '❌ clé manquante'}")
-    print(f"   pdflatex : {'✅' if os.path.exists(PDFLATEX_PATH) else '❌ introuvable'}")
+    print(
+        f"   Groq     : {'✅' if GROQ_API_KEY != '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' else '❌ clé manquante'}"
+    )
+    print(
+        f"   pdflatex : {'✅' if os.path.exists(PDFLATEX_PATH) else '❌ introuvable'}"
+    )
     uvicorn.run("main:app", host="0.0.0.0", port=8003, reload=True)

@@ -1,0 +1,291 @@
+{
+  "_type": "Project",
+  "_id": "aid618a0e-c3e1-4d0e-8e27-3e0e9d7f1b2c",
+  "name": "EduCheck AI",
+  "ownedElements": [
+    {
+      "_type": "UMLModel",
+      "_id": "aid391f1b0-d5e2-4f1a-9b38-4f1e0a8f2c3d",
+      "name": "Model",
+      "ownedElements": [
+        {
+          "_type": "UMLUseCaseDiagram",
+          "_id": "aid5e2c3f1-b4a5-4d2e-8c7b-1a2e3d4f5g6h",
+          "name": "Diagramme Cas d'Utilisation",
+          "ownedViews": [
+            {
+              "_type": "UMLActorView",
+              "_id": "actor-teacher",
+              "model": "actor-teacher-model",
+              "name": "👨‍🏫 Enseignant",
+              "viewModel": {
+                "fillColor": "#64B5F6",
+                "lineColor": "#1565C0",
+                "fontColor": "#000000"
+              },
+              "x": 60,
+              "y": 250,
+              "width": 50,
+              "height": 80
+            },
+            {
+              "_type": "UMLActorView",
+              "_id": "actor-student",
+              "model": "actor-student-model",
+              "name": "👨‍🎓 Étudiant",
+              "viewModel": {
+                "fillColor": "#81C784",
+                "lineColor": "#2E7D32",
+                "fontColor": "#000000"
+              },
+              "x": 60,
+              "y": 550,
+              "width": 50,
+              "height": 80
+            },
+            {
+              "_type": "UMLPackageView",
+              "_id": "package-auth",
+              "model": "package-auth-model",
+              "name": "🔐 Authentification",
+              "viewModel": {
+                "fillColor": "#FFF9C4",
+                "lineColor": "#F9A825"
+              },
+              "x": 200,
+              "y": 100,
+              "width": 180,
+              "height": 100
+            },
+            {
+              "_type": "UMLPackageView",
+              "_id": "package-teacher",
+              "model": "package-teacher-model",
+              "name": "✏️ Actions Enseignant",
+              "viewModel": {
+                "fillColor": "#E3F2FD",
+                "lineColor": "#0D47A1"
+              },
+              "x": 200,
+              "y": 220,
+              "width": 650,
+              "height": 350
+            },
+            {
+              "_type": "UMLPackageView",
+              "_id": "package-student",
+              "model": "package-student-model",
+              "name": "📚 Actions Étudiant",
+              "viewModel": {
+                "fillColor": "#E8F5E9",
+                "lineColor": "#1B5E20"
+              },
+              "x": 200,
+              "y": 590,
+              "width": 650,
+              "height": 150
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-login",
+              "model": "uc-login-model",
+              "name": "Se connecter",
+              "viewModel": {
+                "fillColor": "#FFE082",
+                "lineColor": "#FF8F00"
+              },
+              "x": 230,
+              "y": 135,
+              "width": 120,
+              "height": 50
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-create-exam",
+              "model": "uc-create-exam-model",
+              "name": "Créer examen",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 230,
+              "y": 250,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-add-questions",
+              "model": "uc-add-questions-model",
+              "name": "Ajouter questions",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 390,
+              "y": 250,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-import-exam",
+              "model": "uc-import-exam-model",
+              "name": "Importer examen",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 550,
+              "y": 250,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-publish-exam",
+              "model": "uc-publish-exam-model",
+              "name": "Publier examen",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 230,
+              "y": 320,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-upload-copies",
+              "model": "uc-upload-copies-model",
+              "name": "Uploader copies",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 390,
+              "y": 320,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-launch-correction",
+              "model": "uc-launch-correction-model",
+              "name": "Lancer correction",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 550,
+              "y": 320,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-view-corrections",
+              "model": "uc-view-corrections-model",
+              "name": "Consulter corrections",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 230,
+              "y": 390,
+              "width": 140,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-manual-correction",
+              "model": "uc-manual-correction-model",
+              "name": "Corriger manuelle",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 400,
+              "y": 390,
+              "width": 140,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-export-results",
+              "model": "uc-export-results-model",
+              "name": "Exporter résultats",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 570,
+              "y": 390,
+              "width": 140,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-view-stats",
+              "model": "uc-view-stats-model",
+              "name": "Consulter stats",
+              "viewModel": {
+                "fillColor": "#BBDEFB",
+                "lineColor": "#1976D2"
+              },
+              "x": 400,
+              "y": 460,
+              "width": 130,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-view-notes",
+              "model": "uc-view-notes-model",
+              "name": "Consulter notes",
+              "viewModel": {
+                "fillColor": "#C8E6C9",
+                "lineColor": "#388E3C"
+              },
+              "x": 350,
+              "y": 625,
+              "width": 140,
+              "height": 45
+            },
+            {
+              "_type": "UMLUseCaseView",
+              "_id": "uc-view-feedback",
+              "model": "uc-view-feedback-model",
+              "name": "Consulter feedback",
+              "viewModel": {
+                "fillColor": "#C8E6C9",
+                "lineColor": "#388E3C"
+              },
+              "x": 550,
+              "y": 625,
+              "width": 150,
+              "height": 45
+            },
+            {
+              "_type": "UMLAssociationView",
+              "_id": "assoc-teacher-login",
+              "model": "assoc-teacher-login-model",
+              "head": { "x": 160, "y": 160, "edge": "start" },
+              "tail": { "x": 160, "y": 160, "edge": "end" },
+              "viewModel": { "lineColor": "#1565C0" }
+            },
+            {
+              "_type": "UMLAssociationView",
+              "_id": "assoc-student-login",
+              "model": "assoc-student-login-model",
+              "head": { "x": 160, "y": 160, "edge": "start" },
+              "tail": { "x": 160, "y": 160, "edge": "end" },
+              "viewModel": { "lineColor": "#2E7D32" }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# Secrets - ne jamais commiter
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Node
+node_modules/
+build/
+dist/
+
+# Divers
+.DS_Store
+*.log

@@ -25,6 +25,13 @@ Retourne UNIQUEMENT ce JSON:
   }}
 ]
 
+RÈGLES IMPORTANTES :
+- Pour les questions à choix multiples (A), B), C), D)) → type = "qcm"
+- Pour les questions Vrai/Faux → type = "qcm" avec choix ["Vrai", "Faux"]
+- Pour les questions où l'étudiant doit écrire une réponse libre → type = "ouverte"
+- Pour les questions de calcul mathématique → type = "calcul"
+
+NE JAMAIS utiliser le type "texte". Utilisez "ouverte" à la place.
 Si tu vois "A)", "B)", "C)", "D)" → type = "qcm"
 Si tu vois "Vrai" et "Faux" → type = "qcm" avec choix ["Vrai", "Faux"]
 

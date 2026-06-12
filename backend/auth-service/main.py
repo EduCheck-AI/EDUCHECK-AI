@@ -1,25 +1,18 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-
 from database import SessionLocal, engine, Base
 import models, schemas, crud
 
-# Créer les tables automatiquement dans la base de données
 Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
-# CORS pour React - Supporte tous les ports
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://127.0.0.1:3000",
         "http://localhost:3001",
-        "http://127.0.0.1:3001",
-        "http://localhost:3002",
-        "http://127.0.0.1:3002",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -27,7 +20,6 @@ app.add_middleware(
 )
 
 
-# Dependance pour obtenir une session de base de données
 def get_db():
     db = SessionLocal()
     try:
@@ -36,39 +28,14 @@ def get_db():
         db.close()
 
 
-# REGISTER pour créer un compte
-@app.post("/auth/register")
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    try:
-        # Vérifier si l'utilisateur existe déjà
-        existing_user = (
-            db.query(models.User).filter(models.User.email == user.email).first()
-        )
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email déjà utilisé")
-
-        # Créer l'utilisateur
-        crud.create_user(db, user)
-        return {"message": "Compte créé avec succès"}
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# LOGIN pour se connecter
 @app.post("/auth/login")
 def login(data: schemas.UserLogin, db: Session = Depends(get_db)):
-    try:
-        # Authentifier l'utilisateur
-        user = crud.authenticate_user(db, data.email, data.password)
-        if not user:
-            raise HTTPException(
-                status_code=401, detail="Email ou mot de passe incorrect"
-            )
+    user = crud.authenticate_user(db, data.email, data.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
 
-        return {
+    response = JSONResponse(
+        content={
             "message": "Connexion réussie",
             "user": {
                 "id": user.id,
@@ -77,7 +44,52 @@ def login(data: schemas.UserLogin, db: Session = Depends(get_db)):
                 "role": user.role,
             },
         }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    )
+
+    response.set_cookie(
+        key="user_id", value=str(user.id), httponly=False, samesite="lax"
+    )
+    response.set_cookie(
+        key="user_role", value=user.role, httponly=False, samesite="lax"
+    )
+    response.set_cookie(
+        key="user_name", value=user.full_name, httponly=False, samesite="lax"
+    )
+    response.set_cookie(
+        key="user_email", value=user.email, httponly=False, samesite="lax"
+    )
+    return response
+
+
+@app.post("/auth/logout")
+def logout():
+    response = JSONResponse(content={"message": "Déconnecté"})
+    response.delete_cookie("user_id")
+    response.delete_cookie("user_role")
+    response.delete_cookie("user_name")
+    response.delete_cookie("user_email")
+    return response
+
+
+@app.get("/auth/me")
+def get_me(request: Request):
+    user_id = request.cookies.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Non connecté")
+    return {
+        "id": int(user_id),
+        "role": request.cookies.get("user_role"),
+        "full_name": request.cookies.get("user_name"),
+        "email": request.cookies.get("user_email"),
+    }
+
+
+@app.post("/auth/register")
+def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    existing_user = (
+        db.query(models.User).filter(models.User.email == user.email).first()
+    )
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email déjà utilisé")
+    crud.create_user(db, user)
+    return {"message": "Compte créé avec succès"}

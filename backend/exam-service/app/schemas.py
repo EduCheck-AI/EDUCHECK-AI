@@ -58,6 +58,7 @@ class QuestionResponse(QuestionBase):
 class CopieBase(BaseModel):
     exam_id: int
     student_id: int
+    student_name: Optional[str] = None
     contenu_brut: str
     reponses: Optional[Dict] = None
     note: Optional[float] = None

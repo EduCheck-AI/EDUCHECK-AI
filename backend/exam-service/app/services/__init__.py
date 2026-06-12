@@ -1,0 +1,1 @@
+from .correction_service import extraire_reponses_ocr, corriger_avec_gateway
