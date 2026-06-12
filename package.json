@@ -23,6 +23,8 @@
   "homepage": "https://github.com/EduCheck-AI/educheck_ai#readme",
   "dependencies": {
     "canvas": "^3.2.3",
-    "docx": "^9.7.1"
+    "docx": "^9.7.1",
+    "expo": "^56.0.11",
+    "expo-dev-client": "~56.0.20"
   }
 }
