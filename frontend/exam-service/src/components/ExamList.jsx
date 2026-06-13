@@ -114,6 +114,7 @@ const ExamList = () => {
 
   return (
     <div className="exam-list fade-in">
+      
       {/* Header */}
       <div className="page-header">
         <div>
@@ -154,6 +155,7 @@ const ExamList = () => {
             <span className="stat-value">{stats.publies}</span>
             <span className="stat-label">Publiés</span>
           </div>
+          
         </div>
         <div
           className="stat-card clickable"

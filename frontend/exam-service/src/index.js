@@ -4,6 +4,7 @@ import App from "./App";
 import "./styles/global-overflow.css";
 import "./styles/main.css";
 
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>

@@ -1,15 +1,8 @@
-/* Global styles to prevent horizontal scroll */
-html,
-body {
-  overflow-x: hidden;
-  width: 100%;
-}
-
 /* App with Sidebar */
 .app-with-sidebar {
   display: flex;
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--bg-secondary);
   overflow-x: hidden;
   width: 100%;
 }
@@ -23,9 +16,6 @@ body {
   width: calc(100% - 260px);
 }
 
-/* Quand la sidebar est repliée, on ajuste la marge */
-/* Ceci sera géré par JavaScript, mais on garde une valeur par défaut */
-
 .content-wrapper {
   padding: 24px;
   max-width: 100%;
@@ -35,13 +25,18 @@ body {
   overflow-x: hidden;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .main-content-with-sidebar {
     margin-left: 0;
+    width: 100%;
   }
 
   .content-wrapper {
     padding: 16px;
   }
+}
+/* React Hot Toast uniquement */
+.dark-mode .react-hot-toast {
+  opacity: 1 !important;
+  backdrop-filter: none !important;
 }

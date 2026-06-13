@@ -275,66 +275,77 @@ def draw_alert_section(c, width, y, reponses_vides):
 
 def draw_questions_table(c, width, height, details):
     """Dessine le tableau des questions"""
-    y = height - 2 * cm
+    y = height - 50
     
-    c.setFillColor(COLORS["BLEU_FONCE"])
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(1.5 * cm, y, "DÉTAIL DES RÉPONSES")
-    c.setStrokeColor(COLORS["BLEU_CLAIR"])
-    c.line(1.5 * cm, y - 0.4 * cm, width - 1.5 * cm, y - 0.4 * cm)
+    # Titre
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(HexColor("#2c3e50"))
+    c.drawString(50, y, "DÉTAIL DES QUESTIONS")
+    y -= 25
     
-    y -= 1 * cm
-    
-    c.setFillColor(COLORS["BLEU_FONCE"])
+    # En-têtes du tableau
     c.setFont("Helvetica-Bold", 9)
-    c.drawString(1 * cm, y, "N°")
-    c.drawString(2 * cm, y, "Question")
-    c.drawString(9 * cm, y, "Type")
-    c.drawString(11.5 * cm, y, "Points")
-    c.drawString(14 * cm, y, "Score")
-    c.drawString(17 * cm, y, "Statut")
+    c.setFillColor(HexColor("#ffffff"))
+    c.setFillColor(HexColor("#2980b9"))
+    c.rect(50, y - 15, 30, 20, fill=1)
+    c.rect(80, y - 15, 300, 20, fill=1)
+    c.rect(380, y - 15, 60, 20, fill=1)
+    c.rect(440, y - 15, 50, 20, fill=1)
+    c.rect(490, y - 15, 60, 20, fill=1)
     
-    y -= 0.5 * cm
-    c.setStrokeColor(COLORS["GRIS_CLAIR"])
-    c.line(1 * cm, y, width - 1 * cm, y)
-    y -= 0.5 * cm
+    c.setFillColor(HexColor("#ffffff"))
+    c.drawString(55, y - 10, "N°")
+    c.drawString(85, y - 10, "Question")
+    c.drawString(390, y - 10, "Points")
+    c.drawString(445, y - 10, "Score")
+    c.drawString(500, y - 10, "Statut")
     
-    for i, detail in enumerate(details):
-        if y < 4 * cm:
+    y -= 25
+    c.setFillColor(HexColor("#2c3e50"))
+    c.setFont("Helvetica", 8)
+    
+    # Vérifier qu'on a des détails
+    if not details:
+        c.drawString(50, y, "Aucune donnée disponible")
+        return y - 30
+    
+    for i, d in enumerate(details):
+        if y < 50:
             c.showPage()
-            y = height - 2 * cm
+            y = height - 50
         
-        c.setFont("Helvetica", 9)
-        c.setFillColor(COLORS["TEXTE"])
+        # Numéro
+        c.drawString(55, y, str(i + 1))
         
-        c.drawString(1 * cm, y, str(i + 1))
+        # Texte de la question (tronqué)
+        question_text = d.question_texte[:60] + "..." if len(d.question_texte) > 60 else d.question_texte
+        c.drawString(85, y, question_text)
         
-        q_text = detail.question_texte[:50] + "..." if len(detail.question_texte) > 50 else detail.question_texte
-        c.drawString(2 * cm, y, q_text)
+        # Points
+        points_possibles = float(d.points_possibles) if d.points_possibles else 1
+        c.drawString(395, y, f"{points_possibles:.1f}")
         
-        type_q = detail.type_question
-        type_label = "QCM" if type_q == "qcm" else "Calcul" if type_q == "calcul" else "Ouverte"
-        c.drawString(9 * cm, y, type_label)
+        # Score
+        points_obtenus = float(d.points_obtenus) if d.points_obtenus else 0
+        c.drawString(455, y, f"{points_obtenus:.1f}")
         
-        c.drawString(11.5 * cm, y, f"{detail.points_obtenus:.1f}/{detail.points_possibles:.1f}")
-        
-        score_pct = (detail.points_obtenus / detail.points_possibles) * 100 if detail.points_possibles > 0 else 0
-        c.drawString(14 * cm, y, f"{score_pct:.0f}%")
-        
-        if detail.correct:
-            c.setFillColor(COLORS["VERT"])
-            c.drawString(17 * cm, y, "✓ Correct")
-        elif detail.points_obtenus > 0:
-            c.setFillColor(COLORS["ORANGE"])
-            c.drawString(17 * cm, y, "⚠ Partiel")
+        # Statut avec couleur
+        if points_obtenus >= points_possibles * 0.8:
+            c.setFillColor(HexColor("#27ae60"))
+            statut = "✓ Correct"
+        elif points_obtenus > 0:
+            c.setFillColor(HexColor("#f39c12"))
+            statut = "⚠ Partiel"
         else:
-            c.setFillColor(COLORS["ROUGE"])
-            c.drawString(17 * cm, y, "✗ Incorrect")
+            c.setFillColor(HexColor("#e74c3c"))
+            statut = "✗ Incorrect"
         
-        c.setFillColor(COLORS["TEXTE"])
-        y -= 0.7 * cm
+        c.drawString(495, y, statut)
+        c.setFillColor(HexColor("#2c3e50"))
+        
+        y -= 20
     
-    return y
+    return y - 20
 
 def draw_answers_feedback(c, width, height, details):
     """Dessine les réponses et feedbacks"""

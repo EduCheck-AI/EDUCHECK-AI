@@ -85,7 +85,7 @@ const Sidebar = () => {
       path: "/parametres",
       label: "Paramètres",
       icon: <FaCog />,
-      service: "auth",
+      service: "exam",
     },
   ];
 

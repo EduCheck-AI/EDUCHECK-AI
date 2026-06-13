@@ -11,6 +11,8 @@ import {
 } from "react-icons/fa";
 import "../styles/Navbar.css";
 
+const logoImage = "/logo.jpeg";
+
 const Navbar = () => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,10 +32,8 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <Link to="/exams" className="navbar-logo">
-          <FaGraduationCap className="logo-icon" />
-          <span>
-            Edu<span className="logo-accent">Check</span> AI
-          </span>
+          <img src={logoImage} alt="EduCheck AI" className="logo-image"/>
+          
         </Link>
 
         {/* Desktop Navigation */}

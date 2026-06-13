@@ -1,0 +1,110 @@
+/* ============================================
+   FORÇAGE DES COULEURS POUR TOUS LES COMPOSANTS
+   ============================================ */
+
+/* Mode sombre - override des couleurs en dur */
+.dark-mode {
+  /* Backgrounds */
+  --white: #2d3a4e;
+  --gray-50: #2d3a4e;
+  --gray-100: #3a4a62;
+  --gray-200: #4a5a72;
+  
+  /* Texte */
+  --gray-700: #cbd5e1;
+  --gray-800: #f0f4f8;
+  --gray-900: #f0f4f8;
+}
+
+/* Forcer les backgrounds */
+.dark-mode .bg-white,
+.dark-mode [style*="background: white"],
+.dark-mode [style*="background-color: white"],
+.dark-mode [style*="background-color: #ffffff"],
+.dark-mode [style*="background-color: #fff"] {
+  background-color: var(--card-bg) !important;
+}
+
+.dark-mode .bg-gray-50,
+.dark-mode .bg-gray-100,
+.dark-mode .bg-gray-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Forcer les couleurs de texte */
+.dark-mode .text-gray-700,
+.dark-mode .text-gray-800,
+.dark-mode .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .text-gray-500,
+.dark-mode .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+/* Forcer les bordures */
+.dark-mode .border-gray-200,
+.dark-mode .border-gray-300,
+.dark-mode [style*="border: 1px solid #e2e8f0"] {
+  border-color: var(--border-color) !important;
+}
+
+/* Forcer les cartes */
+.dark-mode .exam-card,
+.dark-mode .stat-card,
+.dark-mode .settings-card,
+.dark-mode .question-card,
+.dark-mode .copy-card {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Forcer les inputs */
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Forcer les boutons secondaires */
+.dark-mode .btn-secondary,
+.dark-mode .settings-btn,
+.dark-mode .action-btn {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .btn-secondary:hover,
+.dark-mode .settings-btn:hover,
+.dark-mode .action-btn:hover {
+  background-color: var(--sidebar-hover) !important;
+}
+
+/* Forcer les tableaux */
+.dark-mode table,
+.dark-mode .table {
+  background-color: var(--card-bg) !important;
+}
+
+.dark-mode th {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode td {
+  color: var(--text-secondary) !important;
+  border-bottom-color: var(--border-color) !important;
+}
+
+/* React Hot Toast uniquement */
+.dark-mode .react-hot-toast {
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+}

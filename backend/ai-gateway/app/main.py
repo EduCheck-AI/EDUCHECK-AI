@@ -261,13 +261,6 @@ async def correct_question(req: CorrectQuestionRequest):
         return result
     
     # 🔥 RÉPONSE COURTE (mais pas pour les questions qui attendent des réponses courtes)
-    if len(reponse) < 10 and not est_reponse_courte_attendue:
-        return {
-            "points_obtenus": 0,
-            "pourcentage": 0,
-            "correct": False,
-            "feedback": "⚠️ Réponse trop courte ou incomplète. L'étudiant n'a pas développé sa réponse."
-        }
     
     # RÉPONSE COURTE AVEC CORRESPONDANCE EXACTE (pour les QCM-like ou réponses simples)
     if req.reponse_correcte and reponse.lower() == req.reponse_correcte.lower():

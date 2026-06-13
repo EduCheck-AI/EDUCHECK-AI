@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
-import '../styles/Sidebar.css';
+import { useLocation, useNavigate } from "react-router-dom";
+import "../styles/Sidebar.css";
 import {
   FaGraduationCap,
   FaList,
@@ -9,140 +9,135 @@ import {
   FaFileAlt,
   FaChartLine,
   FaCog,
-  FaChevronLeft,
-  FaChevronRight,
   FaBars,
   FaUser,
+  FaSignOutAlt,
+  FaUserCircle
 } from "react-icons/fa";
+import toast from "react-hot-toast";
+
+const logoImage = "/logo.jpeg";
 
 const Sidebar = () => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Configuration des URLs par service
-  const serviceUrls = {
-    auth: "http://localhost:3000",
-    exam: "http://localhost:3001",
+  const userName = localStorage.getItem("userName") || "Utilisateur";
+  const userRole = localStorage.getItem("userRole") || "teacher";
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setMobileOpen(false);
   };
 
-  const isActive = (path, service) => {
-    if (service === "exam") {
-      // Pour exam-service, vérifier le pathname actuel
-      return (
-        location.pathname === path || location.pathname.startsWith(path + "/")
-      );
-    }
-    return (
-      location.pathname === path || location.pathname.startsWith(path + "/")
-    );
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
   };
 
-  const handleNavigation = (path, service) => {
-    if (service === "exam") {
-      // Navigation vers exam-service sur le port 3001
-      window.location.href = `${serviceUrls.exam}${path}`;
-    } else {
-      // Navigation dans auth-service avec react-router
-      // Vous devrez passer navigate du parent ou utiliser window.location
-      window.location.href = `${serviceUrls.auth}${path}`;
-    }
+  const confirmLogout = () => {
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("appSettings");
+    
+    toast.success("Déconnexion réussie");
+    window.location.href = "http://localhost:3000";
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   const menuItems = [
-    {
-      path: "/dashbord",
-      label: "Tableau de bord",
-      icon: <FaUser />,
-      service: "auth",
-    },
-    { path: "/exams", label: "Mes examens", icon: <FaList />, service: "exam" },
-    {
-      path: "/exams/new",
-      label: "Créer un examen",
-      icon: <FaPlus />,
-      service: "exam",
-    },
-    {
-      path: "/exams/import",
-      label: "Importer",
-      icon: <FaUpload />,
-      service: "exam",
-    },
-    {
-      path: "/corrections",
-      label: "Corrections",
-      icon: <FaFileAlt />,
-      service: "exam",
-    },
-    {
-      path: "/statistiques",
-      label: "Statistiques",
-      icon: <FaChartLine />,
-      service: "exam",
-    },
-    {
-      path: "/parametres",
-      label: "Paramètres",
-      icon: <FaCog />,
-      service: "auth",
-    },
+    { path: "/profile", label: "Mon Profil", icon: <FaUserCircle /> },
+    { path: "/exams", label: "Mes examens", icon: <FaList /> },
+    { path: "/exams/new", label: "Créer un examen", icon: <FaPlus /> },
+    { path: "/exams/import", label: "Importer", icon: <FaUpload /> },
+    { path: "/corrections", label: "Corrections", icon: <FaFileAlt /> },
+    { path: "/statistiques", label: "Statistiques", icon: <FaChartLine /> },
+    { path: "/parametres", label: "Paramètres", icon: <FaCog /> },
   ];
 
-  const toggleSidebar = () => setCollapsed(!collapsed);
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.startsWith(path + "/");
+  };
+
   const toggleMobile = () => setMobileOpen(!mobileOpen);
 
   return (
     <>
-      {/* Mobile menu button */}
       <button className="mobile-menu-btn" onClick={toggleMobile}>
         <FaBars />
       </button>
 
-      {/* Overlay for mobile */}
       {mobileOpen && <div className="sidebar-overlay" onClick={toggleMobile} />}
 
-      {/* Sidebar */}
-      <aside
-        className={`sidebar ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}
-      >
+      <aside className={`sidebar ${mobileOpen ? "mobile-open" : ""}`}>
         <div className="sidebar-header">
           <div className="logo">
-            <FaGraduationCap className="logo-icon" />
-            {!collapsed && (
-              <span>
-                Edu<span className="logo-accent">Check</span> AI
-              </span>
-            )}
+            <img src={logoImage} alt="EduCheck AI" className="logo-image" />
+            <span>
+              Edu<span className="logo-accent">Check</span> AI
+            </span>
           </div>
-          <button className="collapse-btn" onClick={toggleSidebar}>
-            {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
-          </button>
+        </div>
+
+        <div className="sidebar-user">
+          <div className="user-avatar">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+          <div className="user-info">
+            <div className="user-name">{userName}</div>
+            <div className="user-role">{userRole === "teacher" ? "Enseignant" : "Étudiant"}</div>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
             <div
               key={item.path}
-              onClick={() => handleNavigation(item.path, item.service)}
-              className={`nav-item ${isActive(item.path, item.service) ? "active" : ""}`}
+              onClick={() => handleNavigation(item.path)}
+              className={`nav-item ${isActive(item.path) ? "active" : ""}`}
               style={{ cursor: "pointer" }}
             >
               <span className="nav-icon">{item.icon}</span>
-              {!collapsed && <span className="nav-label">{item.label}</span>}
+              <span className="nav-label">{item.label}</span>
             </div>
           ))}
         </nav>
 
         <div className="sidebar-footer">
-          {!collapsed && (
-            <div className="footer-info">
-              <p>EduCheck AI v1.0</p>
-              <p className="copy">© 2026 - PFE</p>
-            </div>
-          )}
+          <div className="logout-btn" onClick={handleLogout}>
+            <FaSignOutAlt className="logout-icon" />
+            <span>Déconnexion</span>
+          </div>
+          <div className="footer-info">
+            <p>EduCheck AI v1.0</p>
+            <p className="copy">© 2026 - PFE</p>
+          </div>
         </div>
       </aside>
+
+      {showLogoutConfirm && (
+        <div className="logout-modal-overlay" onClick={cancelLogout}>
+          <div className="logout-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="logout-modal-header">
+              <FaSignOutAlt />
+              <h3>Déconnexion</h3>
+            </div>
+            <div className="logout-modal-body">
+              <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+            </div>
+            <div className="logout-modal-footer">
+              <button onClick={cancelLogout} className="btn-cancel">Annuler</button>
+              <button onClick={confirmLogout} className="btn-confirm">Se déconnecter</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
