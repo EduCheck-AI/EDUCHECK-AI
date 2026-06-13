@@ -11,8 +11,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
-        "http://localhost:3001",
+        "*",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -84,6 +83,7 @@ def get_me(request: Request):
     }
 
 
+
 @app.post("/auth/register")
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     existing_user = (
@@ -93,3 +93,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email déjà utilisé")
     crud.create_user(db, user)
     return {"message": "Compte créé avec succès"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

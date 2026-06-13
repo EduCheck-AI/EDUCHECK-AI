@@ -13,6 +13,19 @@ const UploadCopies = () => {
   const [results, setResults] = useState([]);
   const [fileStudent, setFileStudent] = useState({});
   const [studentEmail, setStudentEmail] = useState({});
+  const [students, setStudent] = useState([]);
+
+  useEffect(() => {
+  const fetchStudents = async () => {
+    try {
+      const response = await api.get("/students");
+      setStudents(response.data);
+    } catch (error) {
+      console.error("Erreur chargement étudiants:", error);
+    }
+  };
+  fetchStudents();
+}, []);
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files);
