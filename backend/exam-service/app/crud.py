@@ -26,6 +26,12 @@ def get_exams_by_teacher(db: Session, teacher_id: int):
         models.Examen.id_enseignant == teacher_id
     ).all()
 
+def get_published_exams(db: Session):
+    return db.query(models.Examen).filter(
+        models.Examen.statut == "publié"
+    ).all()
+    
+    
 def get_all_exams(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Examen).offset(skip).limit(limit).all()
 

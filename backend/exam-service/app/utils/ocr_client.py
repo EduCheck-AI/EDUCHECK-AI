@@ -159,37 +159,37 @@ def nettoyer_texte_ocr(texte: str) -> str:
 async def call_ocr_service(file: UploadFile, use_math_mode: bool = False) -> str:
     try:
         content = await file.read()
-        await file.seek(0)
+        
+        # Déterminer le content_type
+        ct = file.content_type or "image/jpeg"
+        fname = file.filename or "upload.jpg"
+        
+        # Forcer le bon mimetype selon l'extension
+        if fname.endswith(".pdf"):
+            ct = "application/pdf"
+        elif fname.endswith(".png"):
+            ct = "image/png"
+        else:
+            ct = "image/jpeg"
 
         endpoint = "process-math" if use_math_mode else "process"
 
         async with httpx.AsyncClient(timeout=400.0) as client:
             response = await client.post(
                 f"{OCR_SERVICE_URL}/ocr/{endpoint}",
-                files={"file": (file.filename, content, file.content_type)}
+                files={"file": (fname, content, ct)}  # ← ct forcé
             )
             response.raise_for_status()
 
         result = response.json()
         text = result.get("text") or ""
-
-        # Nettoyer le texte avant de le retourner
         text = nettoyer_texte_ocr(text)
-
         return text
 
     except httpx.ConnectError:
-        raise HTTPException(
-            status_code=503,
-            detail="Service OCR indisponible"
-        )
+        raise HTTPException(status_code=503, detail="Service OCR indisponible")
     except httpx.HTTPStatusError as e:
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail=f"Erreur OCR: {e.response.text}"
-        )
+        raise HTTPException(status_code=e.response.status_code, detail=f"Erreur OCR: {e.response.text}")
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erreur lors de l'appel au service OCR: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'appel au service OCR: {str(e)}")      
+        

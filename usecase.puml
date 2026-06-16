@@ -1,0 +1,30 @@
+@startuml usecase
+
+left to right direction
+skinparam actorStyle awesome
+skinparam backgroundColor #F8F9FA
+
+skinparam usecase {
+  BackgroundColor #81D4FA
+  BorderColor #0277BD
+  ArrowColor #333
+}
+
+actor Etudiant #FFD180
+actor Professeur #A5D6A7
+
+rectangle "EduCheck AI" {
+
+  usecase "Se connecter" as UC1
+  usecase "Passer examen" as UC2
+  usecase "Consulter résultats" as UC3
+  usecase "Créer examen" as UC4
+}
+
+Etudiant --> UC1
+Etudiant --> UC2
+Etudiant --> UC3
+
+Professeur --> UC4
+
+@enduml

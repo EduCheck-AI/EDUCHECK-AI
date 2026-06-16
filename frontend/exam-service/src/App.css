@@ -1,42 +1,42 @@
-/* App with Sidebar */
-.app-with-sidebar {
-  display: flex;
-  min-height: 100vh;
-  background: var(--bg-secondary);
-  overflow-x: hidden;
-  width: 100%;
-}
+/* src/index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-.main-content-with-sidebar {
-  flex: 1;
-  margin-left: 260px;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 100vh;
-  overflow-x: hidden;
-  width: calc(100% - 260px);
-}
-
-.content-wrapper {
-  padding: 24px;
-  max-width: 100%;
-  width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-@media (max-width: 768px) {
-  .main-content-with-sidebar {
-    margin-left: 0;
-    width: 100%;
+@layer base {
+  body {
+    @apply bg-gris-chaud-50 text-stone-900 transition-colors duration-200;
   }
-
-  .content-wrapper {
-    padding: 16px;
+  
+  /* Mode sombre */
+  .dark body {
+    @apply bg-stone-900 text-gris-chaud-50;
   }
 }
-/* React Hot Toast uniquement */
-.dark-mode .react-hot-toast {
-  opacity: 1 !important;
-  backdrop-filter: none !important;
+
+@layer components {
+  /* Classes réutilisables pour le mode sombre */
+  .card-dark {
+    @apply bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700;
+  }
+  
+  .text-dark {
+    @apply text-stone-900 dark:text-gris-chaud-50;
+  }
+  
+  .text-secondary-dark {
+    @apply text-stone-600 dark:text-stone-400;
+  }
+  
+  .bg-dark {
+    @apply bg-gris-chaud-50 dark:bg-stone-900;
+  }
+  
+  .border-dark {
+    @apply border-stone-200 dark:border-stone-700;
+  }
+  
+  .hover-dark {
+    @apply hover:bg-stone-50 dark:hover:bg-stone-700;
+  }
 }

@@ -1,24 +1,22 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// src/contexts/ThemeContext.js
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 const ThemeContext = createContext();
 
-export const useTheme = () => useContext(ThemeContext);
-
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('theme');
-    return saved === 'dark';
+    const saved = localStorage.getItem("theme");
+    return saved ? saved === "dark" : false;
   });
 
   useEffect(() => {
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+
+    // Appliquer la classe dark sur l'élément html
     if (isDark) {
-      document.documentElement.classList.add('dark-mode');
-      document.body.classList.add('dark-mode');
-      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark-mode');
-      document.body.classList.remove('dark-mode');
-      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
 
@@ -29,4 +27,12 @@ export const ThemeProvider = ({ children }) => {
       {children}
     </ThemeContext.Provider>
   );
+};
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
 };

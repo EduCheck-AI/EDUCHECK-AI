@@ -12,9 +12,10 @@ import {
   School
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import api from './api';
 
 export default function AuthPage() {
-    const navigate = useNavigate(); // 👈 ICI (dans le composant)
+  const navigate = useNavigate();
 
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,19 +27,20 @@ export default function AuthPage() {
     fullName: '',
     email: '',
     password: '',
-    role: 'teacher' // 'teacher' ou 'student'
+    role: 'teacher'
   });
+
+  // ✅ Déclarez les URLs au début
+  const AUTH_URL = process.env.REACT_APP_AUTH_URL || "http://localhost:8000";
+  const EXAM_URL = process.env.REACT_APP_EXAM_URL || "http://localhost:3001";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError('');
   };
 
-  // Fonction pour valider la taille du mot de passe (max 72 bytes)
   const validatePassword = (password) => {
-    // Calculer la taille en bytes UTF-8
     const byteLength = new TextEncoder().encode(password).length;
-    
     if (byteLength > 72) {
       setError(`Le mot de passe est trop long (${byteLength} bytes). Maximum: 72 bytes.`);
       return false;
@@ -56,75 +58,74 @@ export default function AuthPage() {
     setSuccess("");
 
     try {
-      // ✅ URLs depuis .env
-      const AUTH_URL =
-        process.env.REACT_APP_AUTH_URL || "http://localhost:8000";
-      const EXAM_URL =
-        process.env.REACT_APP_EXAM_URL || "http://localhost:3001";
+      if (isLogin) {
+        // ✅ UNIQUEMENT l'appel axios, pas de fetch en plus
+        const response = await api.post("/auth/login", {
+          email: formData.email,
+          password: formData.password
+        });
 
-      const url = isLogin
-        ? `${AUTH_URL}/auth/login`
-        : `${AUTH_URL}/auth/register`;
+        // Stocker dans localStorage
+        localStorage.setItem("userName", response.data.user.full_name);
+        localStorage.setItem("userRole", response.data.user.role);
+        localStorage.setItem("userId", String(response.data.user.id));
 
-      const bodyData = isLogin
-        ? { email: formData.email, password: formData.password }
-        : {
-            full_name: formData.fullName,
-            email: formData.email,
-            password: formData.password,
-            role: formData.role,
-          };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(bodyData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        if (!isLogin) {
-          setSuccess("Compte créé avec succès ! Connectez-vous.");
-          setIsLogin(true);
-          setIsLoading(false);
-          return;
-        }
-
-        // ✅ Stocker dans localStorage
-        localStorage.setItem("userName", data.user.full_name);
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userId", String(data.user.id));
-
-        if (data.user.role === "teacher") {
+        if (response.data.user.role === "teacher") {
           const params = new URLSearchParams({
-            userId: data.user.id,
-            userName: data.user.full_name,
-            userRole: data.user.role,
+            userId: response.data.user.id,
+            userName: response.data.user.full_name,
+            userRole: response.data.user.role,
           });
           window.location.href = `${EXAM_URL}/exams?${params.toString()}`;
+        } else if (response.data.user.role === "student") {
+          // Redirection pour les étudiants si nécessaire
+          navigate("/student-dashboard");
         }
       } else {
-        if (Array.isArray(data.detail)) {
-          setError(data.detail.map((err) => err.msg).join(", "));
-        } else {
-          setError(data.detail || "Erreur serveur");
-        }
+        // ✅ Inscription avec axios aussi (pour rester cohérent)
+        const response = await api.post("/auth/register", {
+          full_name: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+        });
+
+        setSuccess("Compte créé avec succès ! Connectez-vous.");
+        setIsLogin(true);
+        setIsLoading(false);
+        return;
       }
     } catch (err) {
-      setError("Impossible de contacter le serveur");
+      console.error("Erreur complète:", err);
+      
+      // Gestion des erreurs plus précise
+      if (err.response) {
+        // Le serveur a répondu avec une erreur
+        if (err.response.data?.detail) {
+          if (Array.isArray(err.response.data.detail)) {
+            setError(err.response.data.detail.map((e) => e.msg).join(", "));
+          } else {
+            setError(err.response.data.detail);
+          }
+        } else {
+          setError(`Erreur ${err.response.status}: ${err.response.statusText}`);
+        }
+      } else if (err.request) {
+        // La requête a été faite mais pas de réponse
+        setError("Impossible de contacter le serveur. Vérifiez que le backend est démarré sur http://localhost:8000");
+      } else {
+        // Autre erreur
+        setError(err.message || "Une erreur est survenue");
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
     <div className="min-h-screen flex bg-gray-50 font-sans">
-      
       {/* Section Gauche : Visuel & Branding (Masqué sur mobile) */}
       <div className="hidden lg:flex w-1/2 bg-blue-600 relative overflow-hidden items-center justify-center">
-        {/* Cercles décoratifs d'arrière-plan */}
         <div className="absolute w-[800px] h-[800px] bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -top-20 -left-20 animate-pulse"></div>
         <div className="absolute w-[600px] h-[600px] bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 bottom-20 right-20 animate-pulse delay-700"></div>
         
@@ -142,7 +143,6 @@ export default function AuthPage() {
               : "Créez un compte pour commencer à automatiser la correction de vos copies et obtenir des analyses détaillées."}
           </p>
           
-          {/* Carte de témoignage simulée */}
           <div className="bg-blue-700/50 backdrop-blur-sm p-6 rounded-2xl border border-blue-500/30">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-10 h-10 rounded-full bg-blue-400 flex items-center justify-center">
@@ -162,7 +162,6 @@ export default function AuthPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
           
-          {/* En-tête Mobile (Visible uniquement sur petits écrans) */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-600 rounded-xl text-white font-bold text-2xl mb-4">E</div>
             <h2 className="text-2xl font-bold text-gray-900">EduCheck AI</h2>
@@ -177,7 +176,6 @@ export default function AuthPage() {
             </p>
           </div>
 
-          {/* Gestion des erreurs / succès */}
           <AnimatePresence mode='wait'>
             {error && (
               <motion.div 
@@ -206,7 +204,6 @@ export default function AuthPage() {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               
-              {/* Champ Nom Complet (Inscription uniquement) */}
               <AnimatePresence>
                 {!isLogin && (
                   <motion.div
@@ -235,7 +232,6 @@ export default function AuthPage() {
                 )}
               </AnimatePresence>
 
-              {/* Champ Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Adresse email</label>
                 <div className="relative">
@@ -256,7 +252,6 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              {/* Champ Mot de passe */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">Mot de passe</label>
@@ -293,7 +288,6 @@ export default function AuthPage() {
                 </p>
               </div>
 
-              {/* Sélection du Rôle (Inscription uniquement) */}
               <AnimatePresence>
                 {!isLogin && (
                   <motion.div
@@ -353,7 +347,6 @@ export default function AuthPage() {
             </button>
           </form>
 
-          {/* Toggle Login/Signup */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
               {isLogin ? "Pas encore de compte ?" : "Vous avez déjà un compte ?"}
@@ -371,7 +364,6 @@ export default function AuthPage() {
             </p>
           </div>
 
-          {/* Séparateur Social Login */}
           <div className="relative mt-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -382,19 +374,13 @@ export default function AuthPage() {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <button 
-              type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
+            <button type="button" className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
               <span className="sr-only">Google</span>
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
               </svg>
             </button>
-            <button 
-              type="button"
-              className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-            >
+            <button type="button" className="w-full inline-flex justify-center py-2.5 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
               <span className="sr-only">Microsoft</span>
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z" />

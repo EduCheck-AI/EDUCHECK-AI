@@ -487,13 +487,16 @@ async def health():
 
 @app.post("/ocr/process")
 async def process_image(file: UploadFile = File(...)):
-    """Image → texte propre lisible → stocké en DB"""
     try:
-        logger.info(f"OCR texte: {file.filename}")
+        logger.info(f"OCR texte: {file.filename}, content_type: {file.content_type}")
         contents = await file.read()
         if not contents:
             raise HTTPException(status_code=400, detail="Fichier vide")
-
+        
+        # DEBUG — afficher les premiers bytes
+        logger.info(f"📦 Taille: {len(contents)} bytes")
+        logger.info(f"📦 Premiers bytes: {contents[:20].hex()}")
+        
         if file.content_type == "application/pdf":
             contents = pdf_vers_image(contents)
 
@@ -506,13 +509,11 @@ async def process_image(file: UploadFile = File(...)):
             "text": texte,
             "length": len(texte),
         }
-
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"❌ {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/ocr/process-pdf")
 async def process_to_pdf(file: UploadFile = File(...)):

@@ -21,8 +21,14 @@ def read_exams(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
-    teacher_id = current_user.get("id")
-    return crud.get_exams_by_teacher(db, teacher_id)
+    if current_user.get("role") == "teacher":
+        teacher_id = current_user.get("id")
+        return crud.get_exams_by_teacher(db, teacher_id)
+    
+    elif current_user.get("role") == "student":
+        return crud.get_published_exams(db)
+    
+    return []
 
 @router.post("/", response_model=schemas.ExamResponse)
 def create_exam(

@@ -34,7 +34,7 @@ ChartJS.register(
   ArcElement,
   PointElement,
   LineElement,
-  Filler
+  Filler,
 );
 
 const StatistiquesAvancees = () => {
@@ -64,7 +64,9 @@ const StatistiquesAvancees = () => {
       let nbNotes = 0;
 
       for (const exam of exams) {
-        const copies = await api.get(`/copies/exam/${exam.id}`).then(res => res.data);
+        const copies = await api
+          .get(`/copies/exam/${exam.id}`)
+          .then((res) => res.data);
         allCopies = [...allCopies, ...copies];
 
         const matiere = exam.matiere || "Autre";
@@ -77,7 +79,7 @@ const StatistiquesAvancees = () => {
             const note = parseFloat(copy.note);
             const total = parseFloat(exam.points_totaux);
             const pourcentage = (note / total) * 100;
-            
+
             notesParMatiere[matiere].total += note;
             notesParMatiere[matiere].count++;
             notesParMatiere[matiere].notes.push(pourcentage);
@@ -96,11 +98,12 @@ const StatistiquesAvancees = () => {
 
       const moyennesParMatiere = {};
       for (const [matiere, data] of Object.entries(notesParMatiere)) {
-        moyennesParMatiere[matiere] = data.count > 0 ? (data.total / data.count).toFixed(1) : 0;
+        moyennesParMatiere[matiere] =
+          data.count > 0 ? (data.total / data.count).toFixed(1) : 0;
       }
 
       const distribution = [0, 0, 0, 0, 0];
-      toutesNotes.forEach(n => {
+      toutesNotes.forEach((n) => {
         if (n < 20) distribution[0]++;
         else if (n < 40) distribution[1]++;
         else if (n < 60) distribution[2]++;
@@ -108,30 +111,52 @@ const StatistiquesAvancees = () => {
         else distribution[4]++;
       });
 
-      const tauxReussite = toutesNotes.length ? (toutesNotes.filter(n => n >= 50).length / toutesNotes.length * 100) : 0;
+      const tauxReussite = toutesNotes.length
+        ? (toutesNotes.filter((n) => n >= 50).length / toutesNotes.length) * 100
+        : 0;
       const moyenneGenerale = nbNotes ? (sommeNotes / nbNotes).toFixed(1) : 0;
 
       evolutionNotes.sort((a, b) => a.date - b.date);
-      const evolutionParJour = {};
-      evolutionNotes.forEach(e => {
-        const jour = e.date.toISOString().split('T')[0];
-        if (!evolutionParJour[jour]) {
-          evolutionParJour[jour] = { total: 0, count: 0 };
+
+      // ✅ GROUPER PAR SEMAINE
+      const evolutionParSemaine = {};
+      evolutionNotes.forEach((e) => {
+        // Obtenir le numéro de la semaine
+        const date = new Date(e.date);
+        const year = date.getFullYear();
+        const firstDayOfYear = new Date(year, 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        const weekNumber = Math.ceil(
+          (pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7,
+        );
+        const semaineKey = `${year}-S${String(weekNumber).padStart(2, "0")}`;
+
+        if (!evolutionParSemaine[semaineKey]) {
+          evolutionParSemaine[semaineKey] = { total: 0, count: 0, notes: [] };
         }
-        evolutionParJour[jour].total += e.note;
-        evolutionParJour[jour].count++;
+        evolutionParSemaine[semaineKey].total += e.note;
+        evolutionParSemaine[semaineKey].count++;
+        evolutionParSemaine[semaineKey].notes.push(e.note);
       });
-      
-      const evolutionData = Object.entries(evolutionParJour).map(([date, data]) => ({
-        date: date.slice(5),
-        moyenne: data.total / data.count,
-      }));
+
+      // Convertir en tableau et trier par semaine
+      const evolutionData = Object.entries(evolutionParSemaine)
+        .map(([semaine, data]) => ({
+          semaine: semaine,
+          moyenne: data.total / data.count,
+          count: data.count,
+          notes: data.notes,
+        }))
+        .sort((a, b) => a.semaine.localeCompare(b.semaine));
+
+      // Limiter aux 12 dernières semaines pour plus de lisibilité
+      const last12Weeks = evolutionData.slice(-12);
 
       setStats({
         exams: exams,
         copies: allCopies,
         notesParMatiere: moyennesParMatiere,
-        evolutionNotes: evolutionData,
+        evolutionNotes: last12Weeks,
         distributionNotes: distribution,
         tauxReussite: tauxReussite,
         moyenneGenerale: moyenneGenerale,
@@ -149,7 +174,7 @@ const StatistiquesAvancees = () => {
       {
         label: "Moyenne (/20)",
         data: Object.values(stats.notesParMatiere),
-        backgroundColor: "rgba(99, 102, 241, 0.7)",
+        backgroundColor: "rgba(44, 76, 107, 0.7)",
         borderRadius: 8,
         barPercentage: 0.65,
         categoryPercentage: 0.8,
@@ -162,10 +187,17 @@ const StatistiquesAvancees = () => {
     maintainAspectRatio: true,
     plugins: {
       legend: { display: false },
-      tooltip: { backgroundColor: "#1e293b", titleColor: "#f1f5f9", bodyColor: "#cbd5e1" },
+      tooltip: {
+        backgroundColor: "#1e293b",
+        titleColor: "#f1f5f9",
+        bodyColor: "#cbd5e1",
+      },
     },
     scales: {
-      y: { grid: { color: "#e2e8f0" }, title: { display: true, text: "Note /20", font: { weight: "500" } } },
+      y: {
+        grid: { color: "#e2e8f0" },
+        title: { display: true, text: "Note /20", font: { weight: "500" } },
+      },
       x: { grid: { display: false } },
     },
   };
@@ -175,7 +207,13 @@ const StatistiquesAvancees = () => {
     datasets: [
       {
         data: stats.distributionNotes,
-        backgroundColor: ["#ef4444", "#f97316", "#eab308", "#22c55e", "#10b981"],
+        backgroundColor: [
+          "#ef4444",
+          "#f97316",
+          "#eab308",
+          "#22c55e",
+          "#10b981",
+        ],
         borderRadius: 8,
       },
     ],
@@ -184,24 +222,45 @@ const StatistiquesAvancees = () => {
   const distributionOptions = {
     responsive: true,
     maintainAspectRatio: true,
-    plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { backgroundColor: "#1e293b" } },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: { boxWidth: 12, font: { size: 11 } },
+      },
+      tooltip: { backgroundColor: "#1e293b" },
+    },
   };
 
+  // ✅ CONFIGURATION ÉVOLUTION PAR SEMAINE
   const evolutionDataConfig = {
-    labels: stats.evolutionNotes.map(e => e.date),
+    labels: stats.evolutionNotes.map((e) => e.semaine),
     datasets: [
       {
         label: "Performance moyenne",
-        data: stats.evolutionNotes.map(e => e.moyenne),
-        borderColor: "#6366f1",
-        backgroundColor: "rgba(99, 102, 241, 0.08)",
+        data: stats.evolutionNotes.map((e) => e.moyenne),
+        borderColor: "#2c4c6b",
+        backgroundColor: "rgba(44, 76, 107, 0.08)",
         fill: true,
         tension: 0.4,
-        pointRadius: 3,
-        pointHoverRadius: 6,
-        pointBackgroundColor: "#6366f1",
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: "#2c4c6b",
         pointBorderColor: "white",
         borderWidth: 2.5,
+      },
+      {
+        label: "Nombre de copies",
+        data: stats.evolutionNotes.map((e) => e.count),
+        borderColor: "#10b981",
+        backgroundColor: "rgba(16, 185, 129, 0.08)",
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBackgroundColor: "#10b981",
+        pointBorderColor: "white",
+        borderWidth: 2,
+        yAxisID: "y1",
       },
     ],
   };
@@ -209,8 +268,45 @@ const StatistiquesAvancees = () => {
   const evolutionOptions = {
     responsive: true,
     maintainAspectRatio: true,
-    plugins: { legend: { position: "top", labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { backgroundColor: "#1e293b" } },
-    scales: { y: { title: { display: true, text: "Moyenne (%)" }, grid: { color: "#e2e8f0" } }, x: { title: { display: true, text: "Date" }, grid: { display: false } } },
+    plugins: {
+      legend: {
+        position: "top",
+        labels: {
+          boxWidth: 12,
+          font: { size: 11 },
+        },
+      },
+      tooltip: {
+        backgroundColor: "#1e293b",
+        callbacks: {
+          label: function (context) {
+            if (context.dataset.label === "Performance moyenne") {
+              return `Moyenne: ${context.parsed.y.toFixed(1)}%`;
+            } else {
+              return `Copies: ${context.parsed.y}`;
+            }
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        title: { display: true, text: "Moyenne (%)" },
+        grid: { color: "#e2e8f0" },
+        min: 0,
+        max: 100,
+      },
+      y1: {
+        position: "right",
+        title: { display: true, text: "Nombre de copies" },
+        grid: { display: false },
+        min: 0,
+      },
+      x: {
+        title: { display: true, text: "Semaine" },
+        grid: { display: false },
+      },
+    },
   };
 
   const doughnutData = {
@@ -218,7 +314,7 @@ const StatistiquesAvancees = () => {
     datasets: [
       {
         data: [stats.tauxReussite, 100 - stats.tauxReussite],
-        backgroundColor: ["#22c55e", "#ef4444"],
+        backgroundColor: ["#10b981", "#ef4444"],
         borderWidth: 0,
       },
     ],
@@ -228,78 +324,191 @@ const StatistiquesAvancees = () => {
     responsive: true,
     maintainAspectRatio: true,
     cutout: "65%",
-    plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 11 } } }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw.toFixed(1)}%` } } },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: { boxWidth: 10, font: { size: 11 } },
+      },
+      tooltip: {
+        callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw.toFixed(1)}%` },
+      },
+    },
   };
 
-  if (loading) return <LoadingSpinner message="Chargement des statistiques..." />;
+  if (loading)
+    return <LoadingSpinner message="Chargement des statistiques..." />;
+
+  const kpiData = [
+    {
+      icon: <FaBook />,
+      label: "Examens",
+      value: stats.exams.length,
+      color: "text-bleu-profond-600",
+      bg: "bg-bleu-profond-50",
+    },
+    {
+      icon: <FaCopy />,
+      label: "Copies corrigées",
+      value: stats.copies.length,
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+    },
+    {
+      icon: <FaGraduationCap />,
+      label: "Moyenne générale",
+      value: `${stats.moyenneGenerale}/20`,
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+    },
+    {
+      icon: <FaTrophy />,
+      label: "Taux de réussite",
+      value: `${stats.tauxReussite.toFixed(1)}%`,
+      color: "text-rose-600",
+      bg: "bg-rose-50",
+    },
+  ];
 
   return (
-    <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "20px" }}>
-      
-      {/* Header */}
-      <div style={{ marginBottom: "28px" }}>
-        <h1 style={{ fontSize: "26px", fontWeight: "600", marginBottom: "6px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <FaChartLine style={{ color: "#6366f1" }} /> Statistiques avancées
-        </h1>
-        <p style={{ color: "#64748b", fontSize: "14px" }}>Analyse des performances et visualisation des données</p>
+    <div className="min-h-screen bg-gris-chaud-50 p-6">
+      {/* En-tête */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-bleu-profond-50 flex items-center justify-center text-bleu-profond-600">
+            <FaChartLine size={20} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">
+              Statistiques avancées
+            </h1>
+            <p className="text-sm text-stone-500 mt-0.5">
+              Analyse des performances et visualisation des données
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "28px" }}>
-        {[
-          { icon: <FaBook />, label: "Examens", value: stats.exams.length, color: "#6366f1", bg: "#eef2ff" },
-          { icon: <FaCopy />, label: "Copies corrigées", value: stats.copies.length, color: "#10b981", bg: "#ecfdf5" },
-          { icon: <FaGraduationCap />, label: "Moyenne générale", value: `${stats.moyenneGenerale}/20`, color: "#f59e0b", bg: "#fffbeb" },
-          { icon: <FaTrophy />, label: "Taux de réussite", value: `${stats.tauxReussite.toFixed(1)}%`, color: "#ef4444", bg: "#fef2f2" },
-        ].map((kpi, i) => (
-          <div key={i} style={{ background: "white", borderRadius: "20px", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", border: "1px solid #f0f1f3" }}>
-            <div>
-              <div style={{ fontSize: "26px", fontWeight: "700", color: "#0f172a" }}>{kpi.value}</div>
-              <div style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>{kpi.label}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {kpiData.map((kpi, i) => (
+          <div
+            key={i}
+            className="bg-white rounded-2xl p-5 border border-stone-200 hover:border-bleu-profond-300 hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-stone-900">{kpi.value}</p>
+                <p className="text-sm text-stone-500 mt-1">{kpi.label}</p>
+              </div>
+              <div
+                className={`w-12 h-12 rounded-2xl ${kpi.bg} flex items-center justify-center text-xl ${kpi.color}`}
+              >
+                {kpi.icon}
+              </div>
             </div>
-            <div style={{ width: "44px", height: "44px", borderRadius: "24px", background: kpi.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", color: kpi.color }}>{kpi.icon}</div>
           </div>
         ))}
       </div>
 
-      {/* Charts Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
-        
+      {/* Graphiques */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Moyennes par matière */}
-        <div style={{ background: "white", borderRadius: "20px", padding: "18px", border: "1px solid #f0f1f3" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}><FaBook style={{ color: "#6366f1" }} /> Moyennes par matière</h3>
-            <span style={{ fontSize: "11px", background: "#f1f5f9", padding: "2px 10px", borderRadius: "20px", color: "#475569" }}>sur 20</span>
+        <div className="bg-white rounded-2xl p-6 border border-stone-200 hover:border-bleu-profond-300 transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-stone-800 flex items-center gap-2">
+              <FaBook className="text-bleu-profond-600" />
+              Moyennes par matière
+            </h3>
+            <span className="text-xs bg-stone-100 text-stone-500 px-3 py-1 rounded-full">
+              sur 20
+            </span>
           </div>
-          <Bar data={barChartData} options={barChartOptions} height={200} />
+          <div className="h-[220px]">
+            <Bar data={barChartData} options={barChartOptions} />
+          </div>
         </div>
 
         {/* Taux de réussite */}
-        <div style={{ background: "white", borderRadius: "20px", padding: "18px", border: "1px solid #f0f1f3" }}>
-          <h3 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><FaTrophy style={{ color: "#f59e0b" }} /> Taux de réussite global</h3>
-          <div style={{ width: "220px", margin: "0 auto" }}>
-            <Doughnut data={doughnutData} options={doughnutOptions} />
-            <div style={{ textAlign: "center", marginTop: "12px" }}>
-              <span style={{ fontSize: "26px", fontWeight: "700", color: stats.tauxReussite >= 50 ? "#22c55e" : "#ef4444" }}>{stats.tauxReussite.toFixed(1)}%</span>
-              <p style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>de réussite</p>
+        <div className="bg-white rounded-2xl p-6 border border-stone-200 hover:border-bleu-profond-300 transition-all duration-200">
+          <h3 className="text-sm font-semibold text-stone-800 flex items-center gap-2 mb-4">
+            <FaTrophy className="text-amber-500" />
+            Taux de réussite global
+          </h3>
+          <div className="flex flex-col items-center">
+            <div className="w-[200px] h-[200px]">
+              <Doughnut data={doughnutData} options={doughnutOptions} />
+            </div>
+            <div className="mt-4 text-center">
+              <span
+                className={`text-3xl font-bold ${
+                  stats.tauxReussite >= 50
+                    ? "text-emerald-600"
+                    : "text-rose-600"
+                }`}
+              >
+                {stats.tauxReussite.toFixed(1)}%
+              </span>
+              <p className="text-sm text-stone-500 mt-1">de réussite</p>
             </div>
           </div>
         </div>
 
         {/* Distribution des notes */}
-        <div style={{ background: "white", borderRadius: "20px", padding: "18px", border: "1px solid #f0f1f3" }}>
-          <h3 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><FaArrowUp style={{ color: "#10b981" }} /> Distribution des notes</h3>
-          <Bar data={distributionData} options={distributionOptions} height={180} />
+        <div className="bg-white rounded-2xl p-6 border border-stone-200 hover:border-bleu-profond-300 transition-all duration-200">
+          <h3 className="text-sm font-semibold text-stone-800 flex items-center gap-2 mb-4">
+            <FaArrowUp className="text-emerald-500" />
+            Distribution des notes
+          </h3>
+          <div className="h-[200px]">
+            <Bar data={distributionData} options={distributionOptions} />
+          </div>
         </div>
 
-        {/* Évolution des performances */}
-        {stats.evolutionNotes.length > 0 && (
-          <div style={{ background: "white", borderRadius: "20px", padding: "18px", border: "1px solid #f0f1f3" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><FaChartLine style={{ color: "#6366f1" }} /> Évolution des performances</h3>
-            <Line data={evolutionDataConfig} options={evolutionOptions} height={180} />
+        {/* Évolution des performances par semaine */}
+        {stats.evolutionNotes.length > 0 ? (
+          <div className="bg-white rounded-2xl p-6 border border-stone-200 hover:border-bleu-profond-300 transition-all duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-stone-800 flex items-center gap-2">
+                <FaChartLine className="text-bleu-profond-600" />
+                Évolution hebdomadaire
+              </h3>
+              <span className="text-xs bg-stone-100 text-stone-500 px-3 py-1 rounded-full">
+                {stats.evolutionNotes.length} semaines
+              </span>
+            </div>
+            <div className="h-[200px]">
+              <Line data={evolutionDataConfig} options={evolutionOptions} />
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl p-6 border border-stone-200 flex items-center justify-center min-h-[280px]">
+            <div className="text-center">
+              <FaChartLine className="text-stone-300 text-4xl mx-auto mb-3" />
+              <p className="text-sm text-stone-500">
+                Aucune donnée hebdomadaire disponible
+              </p>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Message si aucune donnée */}
+      {stats.exams.length === 0 && (
+        <div className="mt-8 bg-white rounded-2xl p-12 text-center border border-dashed border-stone-300">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-2xl bg-stone-50 flex items-center justify-center text-3xl mb-4 border border-stone-200">
+              <FaChartLine className="text-stone-300" />
+            </div>
+            <h3 className="text-lg font-medium text-stone-900 mb-2">
+              Aucune donnée disponible
+            </h3>
+            <p className="text-sm text-stone-500 max-w-md">
+              Les statistiques s'afficheront automatiquement une fois que vous
+              aurez créé des examens et corrigé des copies.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

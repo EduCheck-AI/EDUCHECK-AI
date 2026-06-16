@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {useEffect} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaUpload, FaFilePdf, FaFileImage, FaTrash, FaArrowLeft, FaUser, FaEnvelope } from "react-icons/fa";
 import api from "../services/api";
@@ -13,19 +14,9 @@ const UploadCopies = () => {
   const [results, setResults] = useState([]);
   const [fileStudent, setFileStudent] = useState({});
   const [studentEmail, setStudentEmail] = useState({});
-  const [students, setStudent] = useState([]);
+  const [students, setStudents] = useState([]);
 
-  useEffect(() => {
-  const fetchStudents = async () => {
-    try {
-      const response = await api.get("/students");
-      setStudents(response.data);
-    } catch (error) {
-      console.error("Erreur chargement étudiants:", error);
-    }
-  };
-  fetchStudents();
-}, []);
+  
 
   const handleFileSelect = (e) => {
     const selected = Array.from(e.target.files);
@@ -301,7 +292,7 @@ const UploadCopies = () => {
               transition: "background 0.2s",
             }}
           >
-            {uploading ? "⏳ Traitement en cours..." : `🚀 Lancer la correction (${files.length} copie${files.length > 1 ? "s" : ""})`}
+            {uploading ? "Traitement en cours..." : ` Lancer la correction (${files.length} copie${files.length > 1 ? "s" : ""})`}
           </button>
         </div>
       )}
@@ -309,11 +300,11 @@ const UploadCopies = () => {
       {/* Résultats */}
       {results.length > 0 && (
         <div style={{ background: "#f0fdf4", borderRadius: "16px", padding: "20px", border: "1px solid #bbf7d0" }}>
-          <h3 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>📊 Résultats de la correction</h3>
+          <h3 style={{ margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>Résultats de la correction</h3>
           
           <div style={{ display: "flex", gap: "24px", marginBottom: "20px", paddingBottom: "12px", borderBottom: "1px solid #bbf7d0" }}>
-            <span style={{ color: "#10b981", fontWeight: "500" }}>✅ {results.filter((r) => r.status === "success").length} corrigée(s)</span>
-            <span style={{ color: "#ef4444", fontWeight: "500" }}>❌ {results.filter((r) => r.status === "error").length} erreur(s)</span>
+            <span style={{ color: "#10b981", fontWeight: "500" }}>{results.filter((r) => r.status === "success").length} corrigée</span>
+            <span style={{ color: "#ef4444", fontWeight: "500" }}>{results.filter((r) => r.status === "error").length} erreur</span>
           </div>
           
           <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
@@ -333,9 +324,9 @@ const UploadCopies = () => {
                   <td style={{ padding: "10px 8px" }}>{r.pourcentage ? `${r.pourcentage}%` : "-"}</td>
                   <td style={{ padding: "10px 8px" }}>
                     {r.status === "success" ? (
-                      <span style={{ color: "#10b981" }}>✅ Corrigée</span>
+                      <span style={{ color: "#10b981" }}>Corrigée</span>
                     ) : (
-                      <span style={{ color: "#ef4444" }}>❌ {r.error}</span>
+                      <span style={{ color: "#ef4444" }}>{r.error}</span>
                     )}
                   </td>
                  </tr>

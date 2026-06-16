@@ -55,12 +55,43 @@ async def get_current_user_from_cookie(request: Request) -> dict:
     
     user_id = request.cookies.get("user_id")
     user_role = request.cookies.get("user_role")
+    user_name = request.cookies.get("user_name")
+    user_email = request.cookies.get("user_email")
     
     print(f"📌 user_id = {user_id}")
     print(f"📌 user_role = '{user_role}'")
     print("=" * 50)
     
     if not user_id:
+        user_id = request.headers.get("x-user-id")
+        user_role = request.headers.get("x-user-role")
+        user_name = request.headers.get("x-user-name")
+        user_email = request.headers.get("x-user-email")
+        print(f"📌 Headers X-User-Id: {user_id}")
+        print(f"📌 Headers X-User-Role: {user_role}")
+        
+    if not user_id:
+        auth_header = request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(
+                        "http://localhost:8000/auth/verify",
+                        headers={"Authorization": f"Bearer {token}"}
+                    )
+                    if resp.status_code == 200:
+                        user_data = resp.json()
+                        user_id = user_data.get("id")
+                        user_role = user_data.get("role")
+                        user_name = user_data.get("full_name")
+                        user_email = user_data.get("email")
+                        print(f"📌 Token validé - ID: {user_id}")
+            except Exception as e:
+                print(f"Erreur validation token: {e}")
+                
+    if not user_id:
+        print("❌ Aucun utilisateur identifié")
         raise HTTPException(status_code=401, detail="Non connecté")
     
     return {

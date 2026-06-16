@@ -94,7 +94,36 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     crud.create_user(db, user)
     return {"message": "Compte créé avec succès"}
 
+@app.get("/auth/students")
+def get_all_students(db: Session = Depends(get_db)):
+    students = db.query(models.User).filter(models.User.role == "student").all()
+    return [
+        {
+            "id": s.id,"full_name": s.full_name, "email": s.email
+        }
+        for s in students
+    ]
 
+@app.get("/auth/students/by-email")
+async def get_student_by_email(email: str, db: Session = Depends(get_db)):
+    student = db.query(models.User).filter(models.User.role == "student", models.User.email == email).first()
+    if not student:
+        raise HTTPException(404, "Etudiant non trouvé")
+    return {"id": student.id, "full_name": student.full_name, "email": student.email}
+
+
+@app.get("/auth/students/search")
+def search_students(q: str, db: Session = Depends(get_db)):
+    students = db.query(models.User).filter(
+        models.User.role == "student",
+        (models.User.full_name.ilike(f"%{q}%") | models.User.email.ilike(f"%{q}%"))
+    ).limit(20).all()
+    return [
+        {"id": s.id, "full_name": s.full_name, "email": s.email}
+        for s in students
+    ]
+
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
