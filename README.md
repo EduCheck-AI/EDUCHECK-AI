@@ -169,8 +169,8 @@ The database uses the `public` and `exam` schemas, with indexes on key fields su
 Replace the placeholder with the actual Git repository URL.
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
-cd <YOUR_PROJECT_DIRECTORY>
+git clone EDUCHECK-AI
+cd EDUCHECK-AI
 ```
 
 ### 2. Configure the environment
